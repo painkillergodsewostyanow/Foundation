@@ -1,0 +1,4 @@
+django==4.2
+mysqlclient
+python-dotenv~=1.0.0
+django-ckeditor-5

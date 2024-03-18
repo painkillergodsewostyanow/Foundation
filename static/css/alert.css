@@ -1,0 +1,16 @@
+body{
+    background-color: black;
+}
+
+.msg {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    margin: 0 auto;
+    width: 80%;
+    background-color: #200772;
+    color: white;
+    height: 50vh;
+    border-radius: 4vh;
+}

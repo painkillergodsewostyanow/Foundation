@@ -1,0 +1,80 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="{% static 'css/auth_reg_form_style.css' %}">
+    <title>Авторизация/Регистрация</title>
+    <script src="{% static 'js/auth_reg_form.js' %}" defer></script>
+</head>
+<body>
+
+    <article class="container">
+        <div class="block">
+            <section class="block__item block-item">
+                <h2 class="block-item__title">У вас есть аккаунт?</h2>
+                <button class="block-item__btn signin-btn">Войти</button>
+            </section>
+            <section class="block__item block-item">
+                <h2 class="block-item__title">У вас нет аккаунта?</h2>
+                <button class="block-item__btn signup-btn ">Зарегистрироваться</button>
+            </section>
+        </div>
+
+        {% if reg_form.errors %}
+            <div class="form-box active">
+        {% else %}
+            <div class="form-box">
+        {% endif %}
+
+        {% if reset_pwd_request_form.errors %}
+            <form action="{% url 'users_app:authorization' %}" class="form form_signin close" method="post" >
+        {% else %}
+            <form action="{% url 'users_app:authorization' %}" class="form form_signin" method="post" >
+        {% endif %}
+
+                <h3 class="form__title">Вход</h3>
+                {{auth_form.errors}}
+                {{auth_form.as_p}}
+                {% csrf_token %}
+                <button class="form__btn">Войти</button> </p>
+                <p class="form__forgot">Восстановить пароль</p>
+            </form>
+
+        {% if reset_pwd_request_form.errors %}
+            <form action="{% url 'users_app:pwd_reset_request' %}" class="form form_forgot show" method="post">
+        {% else %}
+            <form action="{% url 'users_app:pwd_reset_request' %}" class="form form_forgot" method="post">
+        {% endif %}
+
+                <h3 class="form__title">Восстановление пароля</h3>
+                {% csrf_token %}
+                {{reset_pwd_request_form.errors}}
+                {{reset_pwd_request_form.errors}}
+                <p>{{reset_pwd_request_form.email}}</p>
+                <button class="form__btn">Отправить</button> </p>
+                <p class="form__signin"> Войти </p>
+            </form>
+
+            <form action="{% url 'users_app:registration' %}" class="form form_signup"  method="post" >
+                <h3 class="form__title">Регистрация</h3>
+                {% csrf_token %}
+                {{reg_form.errors}}
+                <p>{{reg_form.username}}</p>
+                <p>{{reg_form.email}}</p>
+                <p>{{reg_form.password1}}</p>
+                <p>{{reg_form.password2}}</p>
+                <p>
+                    {{reg_form.student_or_teacher.0}}
+                    {{reg_form.student_or_teacher.1}}
+                </p>
+                <p>
+                    <button class="form__btn form__btn_signup">Зарегистрироваться</button>
+                </p>
+            </form>
+        </div>
+    </article>
+
+</body>
+</html>
