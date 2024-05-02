@@ -4,7 +4,7 @@ from django.urls import reverse
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from .forms import RegistrationForm, LoginForm
-from .models import Teacher, User, Student
+from .models import Teacher, User
 
 
 class UserTestCase(TestCase):
@@ -28,7 +28,7 @@ class UserTestCase(TestCase):
 
     def test_user_related_with_student(self):
         user = RegistrationForm(data={
-            'username': 'root123',
+            'username': 'student',
             'password1': '123321password',
             'password2': '123321password',
             'email': 'roottest123@gmail.com',
@@ -36,8 +36,8 @@ class UserTestCase(TestCase):
         }).save()
 
         try:
-            student = Student.objects.get(user=user)
-        except Student.DoesNotExist:
+            student = User.objects.get(username='student')
+        except User.DoesNotExist:
             student = None
 
         self.assertIsNotNone(student, 'Пользователь не был связан с объектом студента')
@@ -53,7 +53,7 @@ class UserTestCase(TestCase):
 
         try:
             teacher = Teacher.objects.get(user=user)
-        except Student.DoesNotExist:
+        except Teacher.DoesNotExist:
             teacher = None
 
         self.assertIsNotNone(teacher, 'Пользователь не был связан с объектом преподавателя')

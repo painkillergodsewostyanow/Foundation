@@ -20,9 +20,5 @@ class TeacherAdmin(admin.ModelAdmin):
     list_display = ('user',)
 
 
-@admin.register(Student)
-class StudentAdmin(admin.ModelAdmin):
-    list_display = ('user', )
-
 
 

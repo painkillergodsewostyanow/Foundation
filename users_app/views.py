@@ -1,11 +1,108 @@
+from django.db.models import OuterRef, Count, Q, Subquery, IntegerField
+from django.db.models.functions import Coalesce
 from django.shortcuts import render, redirect, reverse
 from django.utils.http import urlsafe_base64_decode
 from django.views import View
+from django.views.generic import DetailView, UpdateView
 
+from education_app.models import StudentThatSolvedCoursePartM2M, StudentThatSolvedLessonM2M, \
+    StudentThatSolvedSimpleTaskM2M, Lesson, Course
 from .forms import *
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponse
 from django.conf import settings
+
+
+class ChangePwdView(View):
+    form_class = ChangePasswordForm
+    template_name = 'users_app/profile/update_profile.html'
+
+    def post(self, *args, **kwargs):
+        pwd_change_form = self.form_class(user=self.request.user, data=self.request.POST)
+        if pwd_change_form.is_valid():
+            pwd_change_form.save()
+            return redirect(settings.LOGOUT_REDIRECT_URL)
+
+        form = UpdateUserForm(instance=self.request.user)
+
+        return render(
+            self.request, self.template_name, {
+                'pwd_change_form': pwd_change_form,
+                'form': form
+            }
+        )
+
+
+class UpdateUser(UpdateView):
+    form_class = UpdateUserForm
+    pwd_change_form = ChangePasswordForm
+    template_name = 'users_app/profile/update_profile.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(
+            {
+                'pwd_change_form': self.pwd_change_form(user=self.get_object())
+            }
+        )
+        return context
+
+    def get_success_url(self):
+        return reverse('users_app:profile', kwargs={'pk': self.get_object().pk})
+
+    def get_object(self, **kwargs):
+        return self.request.user
+
+
+class ProfileView(DetailView):
+    model = User
+    template_name = 'users_app/profile/profile.html'
+
+    def get_context_data(self, **kwargs):
+        student = self.get_object()
+
+        context = super().get_context_data(**kwargs)
+        solved_course_parts = StudentThatSolvedCoursePartM2M.objects.filter(student=student).select_related(
+            'course_part')[:5]
+        solved_lessons = StudentThatSolvedLessonM2M.objects.filter(student=student).select_related('lesson')[:5]
+        solved_simpletask = StudentThatSolvedSimpleTaskM2M.objects.filter(student=student).select_related(
+            'simple_task')[:5]
+
+        activity_list = sorted(list(solved_course_parts) + list(solved_lessons) + list(solved_simpletask),
+                               key=lambda x: x.time)
+
+        sub_query_get_last_solved_lesson = Lesson.objects.filter(
+            course_part__course=OuterRef('pk'),
+            students_that_solved=student,
+        ).values('order')[:1]
+
+        sub_query_get_next_lesson_pk = Lesson.objects.filter(
+            course_part__course=OuterRef('pk'),
+            order__gt=OuterRef('last_solved_lesson_order'),  # ORDER ИЗ last_solved_lesson_order
+        ).values('pk')
+
+        sub_query_get_next_lesson_pk_if_no_one_solved = Lesson.objects.filter(
+            course_part__course=OuterRef('pk'),
+        ).values('pk')[0:1]
+
+        courses = Course.objects.filter(students=student).select_related('author__user').annotate(
+            percent_ready=(
+                    Count('coursepart__lesson', filter=Q(coursepart__lesson__students_that_solved=student)) /
+                    Count('coursepart__lesson', distinct=True) * 100
+            ),
+
+            last_solved_lesson_order=Subquery(
+                sub_query_get_last_solved_lesson, output_field=IntegerField()
+            ),
+
+            next_lesson_pk=Coalesce(
+                Subquery(sub_query_get_next_lesson_pk, output_field=IntegerField()),
+                Subquery(sub_query_get_next_lesson_pk_if_no_one_solved, output_field=IntegerField())
+            ),
+        )
+
+        context.update({'activity_list': activity_list, 'courses': courses})
+        return context
 
 
 def auth_reg_page(request):
@@ -32,7 +129,8 @@ def registration(request):
                 'users_app/alerts/alert.html',
                 {
                     'title': 'Подтвердите почту',
-                    'msg': 'Для завершения регистрации подтвердите почту, письмо высланно автоматически'}
+                    'msg': 'Для завершения регистрации подтвердите почту, письмо высланно автоматически'
+                }
             )
 
         return render(
@@ -51,6 +149,7 @@ def authorization(request):
         auth_form = LoginForm(data=request.POST)
         if auth_form.is_valid():
             user = authenticate(username=auth_form.cleaned_data['username'], password=auth_form.cleaned_data['password'])
+
             if user is not None:
                 if user.is_active:
                     login(request, user)

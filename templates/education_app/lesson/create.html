@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block head %}
+{{form.media}}
+{% endblock %}
+
+{% block content %}
+    <section class="content">
+        <div class="container">
+            <form class="custom-form" style="margin-top:20px;" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                {{form.errors}}
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="mb-3">
+                            {{form.title}}
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        {{ form.theory }}
+                    </div>
+                    <div class="col-md-12 mb-3">
+                        {{ form.practice }}
+                    </div>
+                    <div class="col-md-8" style="">
+                        <div class="mb-3">
+                            {{form.video}}
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        {{form.order}}
+                    </div>
+                </div>
+                <button class="btn float-end" style="margin-top:20px;">Далее</button>
+            </form>
+        </div>
+    </section>
+{% endblock %}
+<body>
+<form action="" enctype="multipart/form-data" method="POST">
+    {% csrf_token %}
+    {{form.errors}}
+  {{form}}
+    <button type="submit">Создать</button>
+</form>

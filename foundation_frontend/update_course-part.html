@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <meta charset="UTF-8">
+    <title>FOUNDATION</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-iYQeCzEYFbKjA/T2uDLTpkwGzCiq6soy8tYaI1GyVh/UjpbCx/TYkiZhlZB6+fzT" crossorigin="anonymous">
+    <link rel="stylesheet" href="teacher_dashboard.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jura:wght@300..700&family=Prosto+One&family=Rubik+Glitch+Pop&display=swap"
+          rel="stylesheet">
+    <style>
+        .sortable-list {
+          list-style-type: none;
+          padding: 0;
+        }
+        .sortable-list li {
+          font-size: 24px;
+          margin-bottom: 5px;
+          padding: 10px;
+          background-color: #f4f4f4;
+          border: 1px solid #ddd;
+          cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg" style="background-color: #712cf9;">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">FOUNDATION</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+                aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link active" aria-current="page" href="#">Дашборд</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="#">Каталог</a>
+                </li>
+            </ul>
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown"
+                       aria-expanded="false">
+                        USERNAME
+                        <img src="https://sun9-32.userapi.com/impg/IaqxUAQgYJJc0fumcFS5sQm_H_SGRw_QAbcKDg/i_Cp1wajLGo.jpg?size=807x617&quality=95&sign=68735e3103b3de803efe4bbf927c31b6&c_uniq_tag=mIiR1q2Kz05YggeAJGyaF_XbgQTAIv_xGzr9luFJ44U&type=album"
+                             alt="Bootstrap" width="46" height="46" style="border-radius: 12px; margin-left: 12px;">
+                    </a>
+
+                    <ul class="dropdown-menu" style="right: 0; left: auto; background-color: #712cf9;">
+                        <li><a class="dropdown-item" href="#">Профиль</a></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li><a class="dropdown-item" href="#">Настройки</a></li>
+                        <li><a class="dropdown-item" href="#">Выйти</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="row">
+        <form class="custom-form" style="margin-top:40px;">
+            <div class="row">
+                <div class="col-md-10">
+                    <div class="mb-3">
+                        <input style="font-size:32px; text-align: center; font-weight: bold;" type="text"
+                               class="form-control" id="inputName" placeholder="Введите название раздела">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <input type="number" style="font-size:32px;" class="form-control" placeholder="Порядок">
+                </div>
+            </div>
+            <button class="btn float-end" style="margin-top:20px;">Сохранить изменения</button>
+        </form>
+    </div>
+    <div class="row">
+        <div class="col-md-12" style="border-radius: 12px; margin-top:60px;">
+            <ul id="sortable" class="sortable-list">
+                <li class="list-group-item">Супер крутое название урока 1 <span style="float:right;"><a
+                        href="">Изменить</a> 1</span></li>
+                <li class="list-group-item">Супер крутое название урока 2 <span style="float:right;"><a
+                        href="">Изменить</a> 2</span></li>
+                <li class="list-group-item">Супер крутое название урока 3 <span style="float:right;"><a
+                        href="">Изменить</a> 3</span></li>
+                <li class="list-group-item">Супер крутое название урока 4 <span style="float:right;"><a
+                        href="">Изменить</a> 4</span></li>
+                <li class="list-group-item">Супер крутое название урока 5 <span style="float:right;"><a
+                        href="">Изменить</a> 5</span></li>
+            </ul>
+        </div>
+    </div>
+
+</div>
+
+
+</body>
+
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-u1OknCvxWvY5kfmNBILK2hRnQC3Pr17a+RTT6rIHI7NnikvbZlHgTPOOmMi466C8"
+        crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+
+<script>
+    $(function() {
+      $("#sortable").sortable();
+      $("#sortable").disableSelection();
+    });
+</script>
+
+</html>

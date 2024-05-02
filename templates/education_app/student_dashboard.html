@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block content %}
+    <div class="container">
+        <div class="row" style="height: 100%;">
+            <main class="col-md-12 ms-sm-auto col-lg-12 px-md-4">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="activity">
+                            <div class="card activity">
+                              <div class="card-body">
+                                <h5 class="card-title">Ваша активность:</h5>
+                                  <div class="card-text">
+                                  {% for activity in activity_list %}
+                                        {% if activity.lesson %}
+                                            <div class="activity-item">{{activity.time}} <span style="color:#D0CECE;">Урок <a href="">{{activity.lesson.title}}</a> решен</span> </div>
+                                        {% elif activity.course_part %}
+                                            <div class="activity-item">{{activity.time}} <span style="color:#D0CECE;">Раздел <a href="">{{activity.course_part.title}}</a> завершен</span> </div>
+                                        {% elif activity.simple_task %}
+                                            <div class="activity-item">{{activity.time}} <span style="color:#D0CECE;">Задача <a href="">{{activity.simple_task.title}}</a> решена</span> </div>
+                                        {% endif %}
+                                  {% endfor %}
+                                  </div>
+                              </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card courses">
+                          <div class="card-body">
+                            <h5 class="card-title">Ваши курсы:</h5>
+                            <div class="card-text">
+                                {% for course in courses %}
+                                    <div class="card">
+                                      <div class="card-body">
+                                        <h5 class="card-title">{{course.title}}</h5>
+                                        <p class="card-text">{{course.author}}</p>
+                                        <div class="row align-items-center">
+                                          <div class="col">
+                                            <div class="progress" role="progressbar" aria-label="Basic example" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">
+                                              <div class="progress-bar" style="width: {{course.percent_ready}}%"></div>
+                                            </div>
+                                          </div>
+                                          <div class="col-auto">
+                                              {% if course.next_lesson_pk %}
+                                                {% if course.percent_ready == 100 %}
+                                                    <a href="{% url 'education_app:lesson' course.next_lesson_pk %}" class="btn continue align-middle">Завершен <span class="badge rounded-pill bg-success">{{course.percent_ready}}%</span></a>
+                                                {% else %}
+                                                    <a href="{% url 'education_app:lesson' course.next_lesson_pk %}" class="btn continue align-middle">Продолжить <span class="badge rounded-pill text-bg-secondary">{{course.percent_ready}}%</span></a>
+                                                {% endif %}
+                                              {% endif %}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                          </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+{% endblock %}

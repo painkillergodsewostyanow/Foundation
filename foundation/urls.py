@@ -24,7 +24,9 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path("ckeditor5/", include('django_ckeditor_5.urls'), name="ck_editor_5_upload_file"),
     path('users/', include('users_app.urls')),
-    path('', include('main_app.urls'))
+    path('edu/', include('education_app.urls')),
+    path('', include('main_app.urls')),
+    path("__debug__/", include("debug_toolbar.urls"))
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

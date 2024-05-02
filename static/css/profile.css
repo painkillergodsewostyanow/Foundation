@@ -1,0 +1,34 @@
+.user-image-block{
+    padding:0 40px 40px 40px
+}
+
+.user-first-part{
+    border-radius: var(--bs-border-radius) !important;
+    background-color: gray;
+    margin-top: 20px;
+    padding: 20px;
+}
+.user-fio{
+    text-align: center;
+    font-weight: bold;
+    color:white;
+    font-size:24px;
+}
+
+.user-bio{
+    border-radius: var(--bs-border-radius) !important;
+    margin-top: 20px;
+    background-color: gray;
+    color:white;
+}
+.user-link-item{
+    font-weight: bold;
+    color: #712cf9;
+}
+.user-link{
+    text-align: center;
+}
+
+.element-bg{
+    border-radius: var(--bs-border-radius) !important;
+}

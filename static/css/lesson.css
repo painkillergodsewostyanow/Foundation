@@ -1,0 +1,61 @@
+.lesson-title{
+    text-align:center;
+    color: white;
+    font-size: 26px;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.lesson-count{
+    color: gray;
+    text-align:center;
+    font-size: 22px;
+    font-weight: bold;
+}
+
+.lesson-header{
+    margin-bottom: 20px;
+}
+.lesson-content{
+    font-size: 20px;
+    display:None;
+    padding: 40px;
+    color: #D3D3D3;
+    word-wrap: break-word;
+}
+.lesson-content.active {
+    display: block;
+}
+.hint-item{
+    color: black;
+    margin-bottom: 20px;
+}
+.questions{
+    background-color: gray;
+    border-radius: 24px;
+    margin-top: 24px;
+}
+.code-questions{
+    background-color: gray;
+    border-radius: 24px;
+    margin-top: 24px;
+}
+.accordion{
+    padding: 40px;
+}
+.code-redactor-block{
+
+    padding: 0 40px 40px 40px
+}
+.code-redactor{
+    background-color:black;
+    padding: 40px;
+}
+.execute_code_btn{
+    margin-top:20px;
+}
+.result{
+    padding:20px;
+    margin-top:20px;
+    background-color:#0a0e14
+}

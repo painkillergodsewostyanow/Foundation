@@ -1,10 +1,61 @@
 from django import forms
 from django.contrib.auth import authenticate
-
 from .models import *
 from django.shortcuts import get_object_or_404
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, UserChangeForm, PasswordChangeForm
 from django.http import Http404
+
+
+class ChangePasswordForm(PasswordChangeForm):
+    old_password = forms.CharField(widget=forms.PasswordInput(attrs={
+        'style': "font-size:24px; text-align: center; font-weight: bold;",
+        'class': "form-control", 'placeholder': "Введите старый пароль"
+    }))
+    new_password1 = forms.CharField(widget=forms.PasswordInput(attrs={
+        'style': "font-size:24px; text-align: center; font-weight: bold;",
+        'class': "form-control", 'placeholder': "Введите новый пароль"
+    }))
+    new_password2 = forms.CharField(widget=forms.PasswordInput(attrs={
+        'style': "font-size:24px; text-align: center; font-weight: bold;",
+        'class': "form-control", 'placeholder': "Повторите пароль"
+    }))
+
+
+class UpdateUserForm(UserChangeForm):
+
+    username = forms.CharField(required=False, widget=forms.TextInput(attrs={
+        'style': "font-size:24px; text-align: center; font-weight: bold;",
+        'class': "form-control", 'placeholder': "Username",
+    }))
+    link_to_tg = forms.URLField(required=False, widget=forms.TextInput(attrs={
+        'style': "font-size:24px; text-align: center; font-weight: bold;",
+        'class': "form-control", 'placeholder': "ссылка на tg"
+    }))
+    link_to_vk = forms.URLField(required=False, widget=forms.TextInput(attrs={
+        'style': "font-size:24px; text-align: center; font-weight: bold;",
+        'class': "form-control", 'placeholder': "ссылка на vk"
+    }))
+    link_to_github = forms.URLField(required=False, widget=forms.TextInput(attrs={
+        'style': "font-size:24px; text-align: center; font-weight: bold;",
+        'class': "form-control", 'placeholder': "ссылка на github"
+    }))
+    link_to_site = forms.URLField(required=False, widget=forms.TextInput(attrs={
+        'style': "font-size:24px; text-align: center; font-weight: bold;",
+        'class': "form-control", 'placeholder': "ссылка на сайт"
+    }))
+    image = forms.ImageField(required=False, widget=forms.FileInput(attrs={
+        'class': "input-file", 'onchange': "previewImage()"
+    }))
+    about = forms.CharField(required=False, widget=forms.Textarea(attrs={
+        'class': 'w-100', 'style': 'font-size: 24px;'
+    }))
+
+    class Meta:
+        model = User
+        fields = (
+            'username', 'image', 'about', 'link_to_vk', 'link_to_tg',
+            'link_to_github', 'link_to_site'
+        )
 
 
 class ResetPasswordRequestForm(forms.Form):
@@ -115,8 +166,5 @@ class RegistrationForm(UserCreationForm):
         user = super().save(self)
         if self.cleaned_data['student_or_teacher'] == '1':
             Teacher.objects.create(user=user)
-            return user
-
-        Student.objects.create(user=user)
         return user
 

@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head %}
+  <style>
+    .square-input {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      border: 1px solid #ced4da;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+    .square-input img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .input-file {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <form action="{% url 'users_app:update' %}" class="custom-form" method="POST" style="margin-top:20px;" enctype="multipart/form-data" >
+        {% csrf_token %}
+        {{form.errors}}
+      <div class="row">
+        <div class="col-md-4" style="height: 375px;">
+          <div class="square-input">
+              {% if request.user.image %}
+                <img id="image-preview" src="{{request.user.image.url}}" alt="Изображение аватрки пользователя">
+              {% else %}
+                <img id="image-preview" src="default" alt="Изображение по умолчанию">
+              {% endif %}
+            {{form.image}}
+          </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="col-md-12 mb-3 col-12">
+                  {{form.username}}
+            </div>
+            <div class="col-12 d-flex justify-content-between mb-3">
+                <div class="col-md-6">
+                    {{form.link_to_tg}}
+                </div>
+                <div class="col-md-6">
+                    {{form.link_to_vk}}
+                </div>
+            </div>
+            <div class="col-12 d-flex justify-content-between">
+                <div class="col-md-6">
+                    {{form.link_to_github}}
+                </div>
+                <div class="col-md-6">
+                    {{form.link_to_site}}
+                </div>
+            </div>
+
+          <div class="col-12 mt-3">
+            {{form.about}}
+          </div>
+            <button class="btn float-end" type="submit">Сохранить</button>
+        </div>
+      </div>
+    </form>
+    <div class="row text-center">
+        <form action="{% url 'users_app:change_pwd' %}" method="POST">
+            {% csrf_token %}
+            {{pwd_change_form.errors}}
+            <div class="col-12" style="color:gray;"><h2>Изменить пароль:</h2></div>
+            <div class="row text-center">
+            <div class="col-lg-4 col-md-6 mb-2">
+                {{pwd_change_form.old_password}}
+            </div>
+            <div class="col-lg-4 col-md-6 mb-2">
+                {{pwd_change_form.new_password1}}
+            </div>
+            <div class="col-lg-4 col-md-6">
+                {{pwd_change_form.new_password2}}
+            </div>
+            </div>
+
+            <button type="submit" class="btn float-end mt-2">Изменить</button>
+        </form>
+    </div>
+</div>
+
+
+
+{% endblock %}
+
+{% block js %}
+    <script>
+      function previewImage() {
+        var fileInput = document.querySelector('input[type=file]');
+        var file = fileInput.files[0];
+        var image = document.getElementById('image-preview');
+
+        var reader = new FileReader();
+        reader.onloadend = function() {
+          image.src = reader.result;
+          image.style.display = 'block';
+        }
+
+        if (file) {
+          reader.readAsDataURL(file);
+        } else {
+          {% if request.user.image %}
+          image.src = "{{request.user.image.url}}";
+          {% endif %}
+          image.style.display = "block";
+        }
+      }
+    </script>
+{% endblock %}

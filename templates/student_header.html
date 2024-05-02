@@ -1,0 +1,38 @@
+<nav class="navbar navbar-expand-lg background-color-second">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="{% url 'education_app:dashboard' %}">FOUNDATION</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+                aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link active" href="{% url 'education_app:catalog' %}">Каталог</a>
+                </li>
+            </ul>
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle active username" href="#" role="button" data-bs-toggle="dropdown"
+                       aria-expanded="false">
+                        USERNAME
+                        {% if request.user.image %}
+                        <img src="{{request.user.image.url}}" alt="Bootstrap" width="46" height="46" style="border-radius: 12px; margin-left: 12px;">
+                        {% else %}
+                        <img src="" alt="default_photo" width="46" height="46" style="border-radius: 12px; margin-left: 12px;">
+                        {% endif %}
+                    </a>
+
+                    <ul class="dropdown-menu" style="right: 0; left: auto; background-color: #712cf9;">
+                        <li><a class="dropdown-item" href="{% url 'users_app:profile' request.user.pk %}">Профиль</a></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li><a class="dropdown-item" href="{% url 'users_app:update' %}">Настройки</a></li>
+                        <li><a class="dropdown-item" href="{% url 'users_app:logout' %}">Выйти</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>

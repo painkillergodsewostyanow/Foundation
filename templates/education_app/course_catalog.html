@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block content %}
+    <div class="container">
+        <div class="row">
+            {% for course in page_obj %}
+                <div class="col-lg-6 col-sm-12 col-xl-6 col-xxl-4">
+                    <div class="card">
+                        <img src="{{course.image.url}}"
+                             class="card-img-top">
+                        <div class="card-body">
+                            <h5 class="card-title text-center">{{course.title}}</h5>
+                            <div class="card-detail d-flex justify-content-center">
+                                <a href="{% url 'education_app:course_preview' course.pk %}" class="btn btn-secondary">Подробнее</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        {% if page_obj.has_other_pages %}
+            <div class="row mt-3">
+                <div class="col-md-12 text-center">
+                    <nav aria-label="">
+                      <ul class="pagination justify-content-center">
+
+                          {% if page_obj.has_previous %}
+                            <li class="page-item"><a class="page-link" href="?page={{page_obj.previous_page_number}}">Предыдущий</a></li>
+                          {% endif %}
+
+                          {% for page in paginator.page_range %}
+                            {% if page == page_obj.number %}
+                                <li class="page-item"><a class="page-link active" href="?page={{page}}">{{page}}</a></li>
+                            {% elif page >= page_obj.number|add:-1 and page <= page_obj.number|add:1 %}
+                                <li class="page-item"><a class="page-link" href="?page={{page}}">{{page}}</a></li>
+                            {% endif %}
+                          {% endfor %}
+
+                          {% if page_obj.has_next %}
+                            <li class="page-item"><a class="page-link" href="?page={{page_obj.next_page_number}}">Следующий</a></li>
+                          {% endif %}
+                      </ul>
+                    </nav>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

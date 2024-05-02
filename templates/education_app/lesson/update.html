@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block head %}
+{{form.media}}
+    <style>
+        .sortable-list {
+          list-style-type: none;
+          padding: 0;
+        }
+        .sortable-list li {
+          font-size: 24px;
+          margin-bottom: 5px;
+          padding: 10px;
+          background-color: #f4f4f4;
+          border: 1px solid #ddd;
+          cursor: pointer;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <section class="content">
+        <div class="container">
+            <form class="custom-form" style="margin-top:20px;" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                {{form.errors}}
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="mb-3">
+                            {{form.title}}
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        {{ form.theory }}
+                    </div>
+                    <div class="col-md-12 mb-3">
+                        {{ form.practice }}
+                    </div>
+                    <div class="col-md-8" style="">
+                        <div class="mb-3">
+                            {{form.video}}
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        {{form.order}}
+                    </div>
+                </div>
+                <button class="btn float-end" style="margin-top:20px;">Сохранить</button>
+            </form>
+
+            <div class="col-md-12" style="border-radius: 12px; margin-top:60px;">
+                <h4 style="color:white;">Задачи</h4>
+                <ul id="sortable" class="sortable-list">
+                    {% for simple_task in object.simpletask_set.all %}
+                        <li class="list-group-item">{{simple_task.title}}
+                            <span style="float:right;">
+                                <a
+                                    href="{% url 'education_app:update_simple_task' simple_task.pk %}">Изменить
+                                </a>{{simple_task.order}}
+                            </span>
+                            <span style="float:right;">
+                                <a
+                                    href="{% url 'education_app:update_simple_task' simple_task.pk %}">Удалить
+                                </a>
+                            </span>
+                        </li>
+                    {% endfor %}
+                    <li class="list-group-item"><a href="{% url 'education_app:create_simple_task' object.pk %}">Добавить задачу</a></li>
+                </ul>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block js %}
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-u1OknCvxWvY5kfmNBILK2hRnQC3Pr17a+RTT6rIHI7NnikvbZlHgTPOOmMi466C8"
+        crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+
+<script>
+    $(function() {
+      $("#sortable").sortable();
+      $("#sortable").disableSelection();
+    });
+</script>
+{% endblock js %}

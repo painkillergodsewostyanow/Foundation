@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="content">
+    <div class="container">
+        <form class="custom-form" style="margin-top:20px;" method="POST">
+            <div class="row">
+                {{form.errors}}
+                {% csrf_token %}
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        {{form.place}}
+<!--                        <select style="font-size:32px;" class="form-select" aria-label="Default select example">-->
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        {{form.title}}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    {{form.order}}
+                </div>
+                <div class="col-md-12">
+                    <div class="mb-3">
+                        {{form.hint}}
+                    </div>
+                </div>
+                <div class="col-md-12">
+                    <div class="mb-3">
+                        {{form.description}}
+                    </div>
+                </div>
+                <div class="col-md-12">
+                    <div class="mb-3">
+                        {{form.right_answer}}
+                    </div>
+                </div>
+            </div>
+            <button class="btn float-end" style="margin-top:20px;">Сохранить</button>
+        </form>
+    </div>
+</section>
+{% endblock %}

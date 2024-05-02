@@ -38,6 +38,10 @@ urlpatterns = [
     # reset pwd block
 
     # verify email block
-    path('email-verify/<uidb64>/<token>', EmailVerify.as_view(), name='verify_email')
+    path('email-verify/<uidb64>/<token>', EmailVerify.as_view(), name='verify_email'),
     # verify email block
+
+    path('<int:pk>', ProfileView.as_view(), name='profile'),
+    path('update/', UpdateUser.as_view(), name='update'),
+    path('change_pwd', ChangePwdView.as_view(), name='change_pwd')
 ]

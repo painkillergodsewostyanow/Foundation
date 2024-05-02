@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block content %}
+    <div class="container">
+        <div class="row">
+            {% for course in request.user.teacher.course_set.all %}
+            <div class="col-lg-6 col-sm-12 col-xl-6 col-xxl-4">
+                <div class="card">
+                    <img src="{{course.image.url}}"
+                         class="card-img-top">
+                    <div class="card-body">
+                        <h5 class="card-title">{{course.title}}</h5>
+                        <div class="card-detail d-flex justify-content-between">
+                            <a href="{% url 'education_app:update_course' course.pk %}" class="btn btn-secondary">Редактировать</a>
+                            <a href="#" class="btn btn-secondary">Статистика</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            <div class="col-lg-6 col-sm-12 col-xl-6 col-xxl-4">
+                <div class="card">
+                    <img src="" class="card-img-top" alt="ФОТО ПЛЮСА">
+                    <div class="card-body">
+                        <div class="card-detail d-flex justify-content-center">
+                            <a href="{% url 'education_app:create_course' %}" class="btn btn-secondary">Добавить</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

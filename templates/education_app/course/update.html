@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block head %}
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-u1OknCvxWvY5kfmNBILK2hRnQC3Pr17a+RTT6rIHI7NnikvbZlHgTPOOmMi466C8"></script>
+
+    {{form.media}}
+
+  <style>
+    .square-input {
+      width: 100%;
+      height:200px;
+      position: relative;
+      border: 1px solid #ced4da;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+    .square-input img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+    }
+    .input-file {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 200px;
+      opacity: 0;
+      cursor: pointer;
+    }
+  </style>
+
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row" style="height: 100%;">
+        <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block sidebar background-color-second">
+            <div class="position-sticky">
+                <ul class="nav flex-column">
+<!--            TODO(OPT DB LOAD)       -->
+                    {% for course_part in object.coursepart_set.all %}
+                        <li class="nav-item dropdown">
+                            <a style="white-space: inherit;" class="nav-link dropdown-toggle course_part" href="#" role="button" data-bs-toggle="dropdown"
+                               aria-expanded="false">
+                                {{course_part.title}}
+                            </a>
+
+                            <ul class="dropdown-menu" style="right: 0; left: auto; background-color: #712cf9;">
+                                {% for lesson in course_part.lesson_set.all %}
+                                    <li><a class="dropdown-item lesson" href="{% url 'education_app:lesson' lesson.pk %}">{{lesson.title}}</a></li>
+                                {% endfor %}
+                                <li><a class="dropdown-item lesson" href="{% url 'education_app:update_course_part' course_part.pk %}">Редактировать</a></li>
+                                <li><a class="dropdown-item lesson" href="{% url 'education_app:delete_course_part' course_part.pk %}">Удалить</a></li>
+                            </ul>
+
+                        </li>
+                    {% endfor %}
+                </ul>
+                    <button type="button" class="btn" data-toggle="modal" data-target="#addCoursePart">
+                      Добавить раздел
+                    </button>
+            </div>
+        </nav>
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="container">
+                <form class="custom-form" style="margin-top:20px;" method="POST" enctype="multipart/form-data">
+                    {{form.errors}}
+                    {% csrf_token %}
+                    <div class="row d-flex justify-content-center">
+                        <div class="col-md-12 col-sm-12 col-lg-6 col-xl-4 " style="">
+                            <div class="mb-3 square-input">
+                                {% if object.image %}
+                                    <img src="{{object.image.url}}" id="image-preview" alt="">
+                                {% endif %}
+                                {{form.image}}
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                {{form.title}}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            {{form.description}}
+                        </div>
+                    </div>
+                    <button class="btn float-end" style="">Сохранить</button>
+                </form>
+            </div>
+        </main>
+    </div>
+</div>
+
+<div class="modal fade" id="addCoursePart" tabindex="-1" role="dialog" aria-labelledby="addCoursePart" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h5 class="modal-title w-100" style="font-size:26px;" id="exampleModalLongTitle">Добавить раздел</h5>
+      </div>
+      <div class="modal-body">
+        <form action="{% url 'education_app:create_course_part' object.pk %}" class="custom-form" style="margin-top:20px;" method="POST">
+            {{form.errors}}
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="mb-3">
+                        {{add_course_part_form.title}}
+                    </div>
+                </div>
+                <div class="col-md-4" style="float: none; margin: 0 auto;">
+                    <div class="mb-3">
+                        {{add_course_part_form.order}}
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer d-flex justify-content-between" >
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+                <button type="submit" class="btn">Добавить</button>
+            </div>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+{% endblock %}

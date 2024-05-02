@@ -1,0 +1,130 @@
+body {
+  font-family: "Jura", sans-serif;
+  background-color: #04001A;
+}
+
+.background-color-second {
+    background-color:#712cf9;
+}
+.navbar {
+    font-size: 18px;
+    font-weight: 900;
+}
+
+.navbar-brand{
+    color: white;
+    font-size: 42px;
+}
+.dropdown-menu{
+    z-index: 99999;
+}
+.navbar-brand:hover{
+    color: #FFD700;
+}
+
+.navbar-nav .nav-link.active, .navbar-nav .show>.nav-link {
+    color: white;
+}
+
+.nav-link{
+    font-size:24px;
+}
+
+.dropdown-item{
+    color: white;
+    font-weight: 900;
+}
+
+.sidebar {
+    height: 100%;
+    border-radius: 0 0 12px 12px
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        height: 100%;
+    }
+}
+
+.main-container{
+    margin-top: 20px;
+}
+
+.card img{
+    height: 200px;
+    object-fit: cover;
+}
+
+.card {
+    background-color: gray;
+    color: white;
+    margin-top: 20px;
+    border-radius: 12px;
+}
+
+.nav{
+    display: inline-block;
+}
+.username{
+    font-size:20px;
+}
+
+.course_part {
+    color: white;
+    font-size: 26px;
+}
+
+.sidebar_item{
+    padding: var(--bs-nav-link-padding-y) var(--bs-nav-link-padding-x);
+    font-size: 26px;
+}
+.background-color-second {
+    background-color:#712cf9;
+}
+
+.text-color-scnd{
+    color:gray;
+}
+
+.errorlist{
+    color:gray;
+}
+
+
+.btn {
+    color:white;
+    font-size: 24px;
+    background-color: #712cf9;
+}
+
+
+.continue{
+    font-size: 16px;
+}
+.btn.active{
+    color: white;
+    background-color:#712cf9;
+}
+
+.activity-item{
+    font-size: 18px;
+    font-weight: bold;
+}
+.activity-item a{
+    color: white;
+    font-weight: bold;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
