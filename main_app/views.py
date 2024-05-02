@@ -5,5 +5,5 @@ from django.shortcuts import reverse, redirect
 
 def index(request):
     if request.user.is_authenticated:
-        return HttpResponse('редирект на дашборд')
+        return redirect('education_app:dashboard')
     return render(request, 'main_app/landing.html')
