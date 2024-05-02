@@ -35,10 +35,18 @@ urlpatterns = [
     path('delete-lesson/<int:pk>', teacher_required(LessonDeleteView.as_view()),
          name='delete_lesson'),
 
+    # SIMPLE TASK
     path('lesson/<int:lesson_id>/add-task', teacher_required(SimpleTaskCreateView.as_view()), name='create_simple_task'),
     path('update-simple-task/<int:simple_task_id>', teacher_required(SimpleTaskUpdateView.as_view()),
          name='update_simple_task'),
     path('simple-task/answer', answer_to_simple_task, name='answer_to_simple_task'),
+    # SIMPLE TASK
+
+    # MANUAL TEST
+    path('reject', manual_reject_answer, name='reject'),
+    path('confirm', manual_confirm_answer, name='confirm'),
+    # MANUAL TEST
+
     path('catalog', CatalogListView.as_view(), name='catalog'),
     path('lesson/<int:pk>', login_required(LessonDetailView.as_view()), name='lesson'),
     path('course-preview/<int:pk>', login_required(CourseDetailView.as_view()), name='course_preview'),

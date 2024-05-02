@@ -90,6 +90,9 @@ body {
     color:gray;
 }
 
+.btn.close{
+    background-color: #712cf9;
+}
 
 .btn {
     color:white;

@@ -5,7 +5,7 @@ from django.shortcuts import render, get_object_or_404, reverse, redirect
 from django.views.generic import UpdateView, DetailView, CreateView, DeleteView, ListView, View
 from .forms import CourseForm, CoursePartForm, LessonForm, AnswerToSimpleTaskForm, SimpleTaskForm
 from .models import (Course, CoursePart, Lesson, SimpleTask, StudentThatSolvedLessonM2M, StudentThatSolvedCoursePartM2M,
-                     StudentThatSolvedSimpleTaskM2M)
+                     StudentThatSolvedSimpleTaskM2M, SimpleTaskToManualTest)
 
 
 def dashboard(request):
@@ -15,8 +15,21 @@ def dashboard(request):
 
 
 class TeacherDashboard(View):
+
     def get(self, request, *args, **kwargs):
-        return render(request, 'education_app/teacher_dashboard.html')
+
+        manual_test_objs = (
+            SimpleTaskToManualTest.objects
+            .filter(simple_task__lesson__course_part__course__author=request.user.teacher)
+            .select_related('simple_task')
+            .select_related('student')
+        )
+
+        return render(
+            request,
+            'education_app/teacher_dashboard.html',
+            context={'manual_test_objs': manual_test_objs}
+        )
 
 
 class StudentDashboard(View):
@@ -413,8 +426,42 @@ def answer_to_simple_task(request):
     if request.method == 'POST':
         form = AnswerToSimpleTaskForm(data=request.POST, student=request.user)
         if form.is_valid():
-            simple_task = get_object_or_404(SimpleTask, id=int(form.data['simple_task']))
-            simple_task.students_that_solved.add(request.user)
-            return HttpResponse('Правильно!')
+            if not form.object.manual_test:
+                if form.check_answer():
+                    return HttpResponse('Правильно!')
+                return HttpResponse('К сожалению вы допустили ошибку')
 
+            send_result = form.send_to_manual_test()
+            if isinstance(send_result, (bool, )):
+                return HttpResponse('ваш ответ отправлен на ручную проверку')
+            return HttpResponse(send_result)
+
+    raise Http404()
+
+
+def manual_reject_answer(request):
+    if request.method == "POST":
+        manual_test = (
+            SimpleTaskToManualTest.objects
+            .select_related('simple_task__lesson__course_part__course__author')
+            .filter(pk=request.POST['manual_test_id']).first()
+        )
+        if manual_test.simple_task.lesson.course_part.course.is_owner(request.user.teacher):
+            manual_test.reject()
+            return redirect(request.META['HTTP_REFERER'])
+        raise Http404
+    raise Http404()
+
+
+def manual_confirm_answer(request):
+    if request.method == "POST":
+        manual_test = (
+            SimpleTaskToManualTest.objects
+            .select_related('simple_task__lesson__course_part__course__author')
+            .filter(pk=request.POST['manual_test_id']).first()
+        )
+        if manual_test.simple_task.lesson.course_part.course.is_owner(request.user.teacher):
+            manual_test.confirm()
+            return redirect(request.META['HTTP_REFERER'])
+        raise Http404
     raise Http404()

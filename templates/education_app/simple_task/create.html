@@ -10,7 +10,6 @@
                 <div class="col-md-4">
                     <div class="mb-3">
                         {{form.place}}
-<!--                        <select style="font-size:32px;" class="form-select" aria-label="Default select example">-->
                     </div>
                 </div>
                 <div class="col-md-4">
@@ -34,6 +33,17 @@
                 <div class="col-md-12">
                     <div class="mb-3">
                         {{form.right_answer}}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-check">
+                        {{form.re_answer}}
+                        <label class="form-check-label" for="re_answer" style="color:gray; font-size:18px;">Указать в качестве ответа регулярное выражение</label>
+                    </div>
+
+                    <div class="form-check">
+                        {{form.manual_test}}
+                        <label class="form-check-label" for="manual_test" style="color:gray; font-size:18px;">Проверить ответ в ручную</label>
                     </div>
                 </div>
             </div>

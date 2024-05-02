@@ -265,6 +265,8 @@ class SimpleTask(models.Model):
         to=User, through='StudentThatSolvedSimpleTaskM2M'
     )
     order = models.PositiveSmallIntegerField()
+    re_answer = models.BooleanField(default=False)
+    manual_test = models.BooleanField(default=False)
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         """
@@ -295,3 +297,22 @@ class StudentThatSolvedSimpleTaskM2M(models.Model):
     class Meta:
         verbose_name = 'Решенная студентом задача'
         verbose_name_plural = 'Решенные студентами задачи'
+
+
+class SimpleTaskToManualTest(models.Model):
+    student = models.ForeignKey(User, on_delete=models.PROTECT)
+    simple_task = models.ForeignKey(SimpleTask, on_delete=models.PROTECT)
+    time = models.DateTimeField(auto_now_add=True)
+    answer = models.CharField(max_length=255)
+
+    class Meta:
+        verbose_name = 'Решение отправленное на ручную проверку'
+        verbose_name_plural = 'Решения отправленные на ручную проверку'
+
+    def reject(self):
+        self.delete()
+
+    def confirm(self):
+        self.simple_task.students_that_solved.add(self.student)
+        SimpleTaskToManualTest.objects.filter(student=self.student, simple_task=self.simple_task).delete()
+        self.delete()

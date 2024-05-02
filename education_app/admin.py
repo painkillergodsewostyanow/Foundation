@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 from .models import Course, CoursePart, Lesson, StudentThatSolvedCourseM2M, StudentThatSolvedCoursePartM2M, \
-    StudentThatSolvedLessonM2M, StudentOnCourseM2M, SimpleTask, StudentThatSolvedSimpleTaskM2M
+    StudentThatSolvedLessonM2M, StudentOnCourseM2M, SimpleTask, StudentThatSolvedSimpleTaskM2M, SimpleTaskToManualTest
 
 
 @admin.register(Course)
@@ -41,6 +41,11 @@ class StudentThatSolvedCoursePartAdmin(admin.ModelAdmin):
 @admin.register(StudentThatSolvedLessonM2M)
 class StudentThatSolvedCoursePartAdmin(admin.ModelAdmin):
     list_display = ('student', 'lesson', 'time')
+
+
+@admin.register(SimpleTaskToManualTest)
+class SimpleTaskToManualTestAdmin(admin.ModelAdmin):
+    list_display = ('student', 'simple_task', 'time')
 
 
 @admin.register(Course.students.through)
