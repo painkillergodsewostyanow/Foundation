@@ -1,2 +1,2 @@
-static/bootstrap/** linguist-vendored
-static/codemirror/** linguist-vendored
+static/bootstrap/* linguist-vendored
+static/codemirror/* linguist-vendored
