@@ -61,6 +61,48 @@
                             </div>
                           </div>
                         </div>
+                        {% if manual_test_result|length > 0 %}
+                            <div class="card courses">
+                              <div class="card-body">
+                                <h5 class="card-title">Задания на ручной обработке:</h5>
+                                <div class="card-text">
+                                    {% for test_result in manual_test_result %}
+                                        <div class="card">
+                                          <div class="card-body">
+                                              {% if test_result.simple_task %}
+                                                <h5 class="card-title">
+                                                    <a href="{% url 'education_app:lesson' test_result.simple_task.lesson.pk %}">
+                                                        {{test_result.simple_task.title}} {{test_result.time}}
+                                                    </a>
+                                                </h5>
+                                                <p class="card-text">Ваш ответ:
+                                                    {{test_result.answer}}
+                                                </p>
+
+                                                {% if test_result.comment %}
+                                                    <p class="card-test">
+                                                        {{test_result.comment}}
+                                                    </p>
+                                                {% endif %}
+
+                                              {% endif %}
+                                              <div style="font-size:24px;">
+                                                {% if test_result.status is None %}
+                                                  <span class="badge bg-secondary">В процессе</span>
+                                                {% elif test_result.status is True %}
+                                                  <span class="badge bg-success">Принято</span>
+                                                {% else %}
+                                                  <span class="badge bg-danger">Не принято</span>
+                                                {% endif %}
+                                              </div>
+
+                                          </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                              </div>
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
             </main>

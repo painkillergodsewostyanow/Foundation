@@ -18,12 +18,13 @@ def dashboard(request):
 class TeacherDashboard(View):
 
     def get(self, request, *args, **kwargs):
-        manual_test_objs = (
+        simple_task_manual_test = list(
             SimpleTaskToManualTest.objects
-            .filter(simple_task__lesson__course_part__course__author=request.user.teacher)
+            .filter(simple_task__lesson__course_part__course__author=request.user.teacher, status__isnull=True)
             .select_related('simple_task')
             .select_related('student')
         )
+        manual_test_objs = simple_task_manual_test
 
         return render(
             request,
@@ -44,8 +45,16 @@ class StudentDashboard(View):
         solved_quiz = StudentThatSolvedQuizM2M.objects.filter(student=student).select_related(
             'quiz')[:5]
 
-        activity_list = sorted(list(solved_quiz) + list(solved_course_parts) + list(solved_lessons) + list(solved_simpletask),
-                               key=lambda x: x.time)
+        activity_list = sorted(
+            list(solved_quiz) + list(solved_course_parts) + list(solved_lessons) + list(solved_simpletask),
+            key=lambda x: x.time)
+
+        manual_test_result = list(
+            SimpleTaskToManualTest.objects
+            .filter(student=student)
+            .select_related('simple_task')
+            .select_related('simple_task__lesson')
+        )
 
         sub_query_get_last_solved_lesson = Lesson.objects.filter(
             course_part__course=OuterRef('pk'),
@@ -80,7 +89,8 @@ class StudentDashboard(View):
         return render(
             request, 'education_app/student_dashboard.html',
             {
-                'courses': courses, 'activity_list': activity_list
+                'courses': courses, 'activity_list': activity_list,
+                'manual_test_result': manual_test_result
             }
         )
 
@@ -344,6 +354,13 @@ class LessonDetailView(DetailView):
         if not simple_tasks and not quizs:
             lesson.students_that_solved.add(request.user)
 
+        request_user_is_teacher = self.request.user.related_teacher
+        request_user_is_owner = False
+
+        if request_user_is_teacher:
+            if request_user_is_teacher == self.get_object().course_part.course.author:
+                request_user_is_owner = True
+
         return render(
             request,
             self.template_name,
@@ -353,7 +370,8 @@ class LessonDetailView(DetailView):
                 'lesson_count': lesson.lessons_count,
                 'course_parts': course_parts,
                 'theory_quiz': theory_quiz, 'practice_quiz': practice_quiz,
-                'video_quiz': video_quiz
+                'video_quiz': video_quiz,
+                'request_user_is_owner': request_user_is_owner
             }
         )
 
@@ -442,7 +460,8 @@ class SimpleTaskDeleteView(DeleteView):
 
     def post(self, request, *args, **kwargs):
         simple_task = self.get_object()
-        self.success_url = reverse('education_app:update_course_part', kwargs={'course_part_id': simple_task.lesson.course_part.pk})
+        self.success_url = reverse('education_app:update_course_part',
+                                   kwargs={'course_part_id': simple_task.lesson.course_part.pk})
         if not simple_task.lesson.course_part.course.is_owner(self.request.user.teacher):
             raise Http404()
         return super().post(request, args, kwargs)
@@ -598,6 +617,12 @@ def manual_reject_answer(request):
             .select_related('simple_task__lesson__course_part__course__author')
             .filter(pk=request.POST['manual_test_id']).first()
         )
+
+        comment = request.POST.get('comment', '')
+
+        manual_test.comment = comment
+        manual_test.save()
+
         if manual_test.simple_task.lesson.course_part.course.is_owner(request.user.teacher):
             manual_test.reject()
             return redirect(request.META['HTTP_REFERER'])
@@ -612,6 +637,12 @@ def manual_confirm_answer(request):
             .select_related('simple_task__lesson__course_part__course__author')
             .filter(pk=request.POST['manual_test_id']).first()
         )
+
+        comment = request.POST.get('comment', '')
+
+        manual_test.comment = comment
+        manual_test.save()
+
         if manual_test.simple_task.lesson.course_part.course.is_owner(request.user.teacher):
             manual_test.confirm()
             return redirect(request.META['HTTP_REFERER'])

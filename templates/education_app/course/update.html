@@ -43,7 +43,6 @@
         <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block sidebar background-color-second">
             <div class="position-sticky">
                 <ul class="nav flex-column">
-<!--            TODO(OPT DB LOAD)       -->
                     {% for course_part in object.coursepart_set.all %}
                         <li class="nav-item dropdown">
                             <a style="white-space: inherit;" class="nav-link dropdown-toggle course_part" href="#" role="button" data-bs-toggle="dropdown"
@@ -55,6 +54,7 @@
                                 {% for lesson in course_part.lesson_set.all %}
                                     <li><a class="dropdown-item lesson" href="{% url 'education_app:lesson' lesson.pk %}">{{lesson.title}}</a></li>
                                 {% endfor %}
+
                                 <li><a class="dropdown-item lesson" href="{% url 'education_app:update_course_part' course_part.pk %}">Редактировать</a></li>
                                 <li><a class="dropdown-item lesson" href="{% url 'education_app:delete_course_part' course_part.pk %}">Удалить</a></li>
                             </ul>

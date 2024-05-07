@@ -347,17 +347,22 @@ class SimpleTaskToManualTest(models.Model):
     simple_task = models.ForeignKey(SimpleTask, on_delete=models.PROTECT)
     time = models.DateTimeField(auto_now_add=True)
     answer = models.CharField(max_length=255)
+    status = models.BooleanField(blank=True, null=True)
+    comment = models.CharField(max_length=500, blank=True, null=True)
 
     class Meta:
         verbose_name = 'Решение отправленное на ручную проверку'
         verbose_name_plural = 'Решения отправленные на ручную проверку'
 
     def reject(self):
-        self.delete()
+        self.status = False
+        self.save()
 
     def confirm(self):
+        self.status = True
+        self.save()
         self.simple_task.students_that_solved.add(self.student)
-        SimpleTaskToManualTest.objects.filter(student=self.student, simple_task=self.simple_task).delete()
-        self.delete()
+
+
 
 

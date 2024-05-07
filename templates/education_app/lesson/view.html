@@ -26,8 +26,10 @@
                                 {% for lesson in course_part.lesson_set.all %}
                                     <li><a class="dropdown-item lesson" href="{% url 'education_app:lesson' lesson.pk %}">{{lesson.title}}</a></li>
                                 {% endfor %}
-                                <li><a class="dropdown-item lesson" href="{% url 'education_app:update_course_part' course_part.pk %}">Редактировать</a></li>
-                                <li><a class="dropdown-item lesson" href="{% url 'education_app:delete_course_part' course_part.pk %}">Удалить</a></li>
+                                {% if request_user_is_owner %}
+                                    <li><a class="dropdown-item lesson" href="{% url 'education_app:update_course_part' course_part.pk %}">Редактировать</a></li>
+                                    <li><a class="dropdown-item lesson" href="{% url 'education_app:delete_course_part' course_part.pk %}">Удалить</a></li>
+                                {% endif %}
                             </ul>
                         </li>
                     {% endfor %}

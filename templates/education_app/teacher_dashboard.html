@@ -50,19 +50,13 @@
                                         Задача: <a href="{% url 'education_app:update_simple_task' obj.simple_task.pk %}">{{obj.simple_task.title}}</a>
                                         Ответ студента: {{obj.answer}}
                                     </div>
-
-                                    <form action="{% url 'education_app:confirm' %}" method="POST">
+                                    <form method="POST" style="padding:20px;">
                                         {% csrf_token %}
                                         <input type="hidden" name="manual_test_id" value="{{obj.pk}}">
-                                        <button type="submit" class="btn w-100">Подтвердить</button>
+                                        <input type="text" name="comment" style="font-size:32px;" class="form-control mb-2" placeholder="Комментарий">
+                                        <button formaction="{% url 'education_app:confirm' %}" type="submit" class="btn w-100">Подтвердить</button>
+                                        <button formaction="{% url 'education_app:reject' %}" type="submit" class="btn mt-1 w-100">Отклонить</button>
                                     </form>
-
-                                    <form action="{% url 'education_app:reject' %}" method="POST">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="manual_test_id" value="{{obj.pk}}">
-                                        <button type="submit" class="btn mt-1 w-100">Отклонить</button>
-                                    </form>
-
                                 </div>
                             </div>
                         {% endfor %}
