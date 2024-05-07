@@ -13,15 +13,17 @@
                               <div class="card-body">
                                 <h5 class="card-title">Ваша активность:</h5>
                                   <div class="card-text">
-                                  {% for activity in activity_list %}
-                                        {% if activity.lesson %}
-                                            <div class="activity-item">{{activity.time}} <span style="color:#D0CECE;">Урок <a href="">{{activity.lesson.title}}</a> решен</span> </div>
-                                        {% elif activity.course_part %}
-                                            <div class="activity-item">{{activity.time}} <span style="color:#D0CECE;">Раздел <a href="">{{activity.course_part.title}}</a> завершен</span> </div>
-                                        {% elif activity.simple_task %}
-                                            <div class="activity-item">{{activity.time}} <span style="color:#D0CECE;">Задача <a href="">{{activity.simple_task.title}}</a> решена</span> </div>
-                                        {% endif %}
-                                  {% endfor %}
+                                      {% for activity in activity_list %}
+                                            {% if activity.lesson %}
+                                                <div class="activity-item">{{activity.time}} <span style="color:#D0CECE;">Урок <a href="">{{activity.lesson.title}}</a> решен</span> </div>
+                                            {% elif activity.course_part %}
+                                                <div class="activity-item">{{activity.time}} <span style="color:#D0CECE;">Раздел <a href="">{{activity.course_part.title}}</a> завершен</span> </div>
+                                            {% elif activity.simple_task %}
+                                                <div class="activity-item">{{activity.time}} <span style="color:#D0CECE;">Задача <a href="">{{activity.simple_task.title}}</a> решена</span> </div>
+                                            {% elif activity.quiz %}
+                                                <div class="activity-item">{{activity.time}} <span style="color:#D0CECE;">Квиз <a href="">{{activity.quiz.title}}</a> решен</span> </div>
+                                            {% endif %}
+                                      {% endfor %}
                                   </div>
                               </div>
                             </div>

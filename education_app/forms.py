@@ -2,7 +2,7 @@ from django.utils import timezone
 
 from django.shortcuts import get_object_or_404
 import re
-from .models import Course, CoursePart, Lesson, SimpleTask, SimpleTaskToManualTest
+from .models import Course, CoursePart, Lesson, SimpleTask, SimpleTaskToManualTest, QuizQuestion, Answer
 from django import forms
 
 
@@ -98,6 +98,48 @@ class SimpleTaskForm(forms.ModelForm):
     class Meta:
         model = SimpleTask
         fields = ('place', 'title', 'description', 'hint', 'right_answer', 'order', 're_answer', 'manual_test')
+
+
+class QuizForm(forms.ModelForm):
+    place = forms.ChoiceField(
+        widget=forms.Select(
+            attrs={'style': "font-size:32px;", 'class': "form-select",
+                   'aria-label': "Выберите раздел где будет размещена задача"
+                   }
+        ),
+        choices=(
+          (1, "Раздел теории"),
+          (2, "Раздел практики"),
+          (3, "Раздел видео")
+        )
+    )
+    title = forms.CharField(widget=forms.TextInput(attrs={
+        'style': "font-size:32px;", 'class': "form-control", 'placeholder': "Название"
+    }))
+
+    hint = forms.CharField(widget=forms.TextInput(attrs={
+        'style': "font-size:32px;", 'class': "form-control", 'placeholder': "Подсказка"
+    }))
+
+    question = forms.CharField(widget=forms.TextInput(attrs={
+        'style': "font-size:32px;", 'class': "form-control", 'placeholder': "Описание"
+    }))
+
+    class Meta:
+        model = QuizQuestion
+        fields = ('place', 'title', 'question', 'hint')
+
+
+class AnswerForm(forms.ModelForm):
+    text = forms.CharField(widget=forms.TextInput(attrs={
+        'style': "font-size:32px;", 'class': "form-control", 'placeholder': "Ответ"
+    }))
+
+    is_correct = forms.BooleanField(required=False, widget=forms.CheckboxInput(attrs={'class': "form-check-input"}))
+
+    class Meta:
+        model = Answer
+        fields = ('text', 'is_correct')
 
 
 class AnswerToSimpleTaskForm(forms.Form):

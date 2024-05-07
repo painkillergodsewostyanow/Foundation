@@ -43,6 +43,25 @@
               {% endif %}
             {{form.image}}
           </div>
+            <form action="{% url 'users_app:change_pwd' %}" method="POST">
+                {% csrf_token %}
+                {{pwd_change_form.errors}}
+                <div class="row text-center">
+                <div class="col-lg-12 col-md-12 mt-2 mb-2">
+                    {{pwd_change_form.old_password}}
+                </div>
+                <div class="col-lg-12 col-md-12 mb-2">
+                    {{pwd_change_form.new_password1}}
+                </div>
+                <div class="col-lg-12 col-md-12">
+                    {{pwd_change_form.new_password2}}
+                </div>
+                </div>
+                <div class="text-center">
+                    <button type="submit" class="btn mt-2 ">Изменить пароль</button>
+                </div>
+            </form>
+
         </div>
 
         <div class="col-md-8">
@@ -73,26 +92,6 @@
         </div>
       </div>
     </form>
-    <div class="row text-center">
-        <form action="{% url 'users_app:change_pwd' %}" method="POST">
-            {% csrf_token %}
-            {{pwd_change_form.errors}}
-            <div class="col-12" style="color:gray;"><h2>Изменить пароль:</h2></div>
-            <div class="row text-center">
-            <div class="col-lg-4 col-md-6 mb-2">
-                {{pwd_change_form.old_password}}
-            </div>
-            <div class="col-lg-4 col-md-6 mb-2">
-                {{pwd_change_form.new_password1}}
-            </div>
-            <div class="col-lg-4 col-md-6">
-                {{pwd_change_form.new_password2}}
-            </div>
-            </div>
-
-            <button type="submit" class="btn float-end mt-2">Изменить</button>
-        </form>
-    </div>
 </div>
 
 

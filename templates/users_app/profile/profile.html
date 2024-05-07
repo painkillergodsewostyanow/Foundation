@@ -58,6 +58,8 @@
                                                 <div class="activity-item">{{activity.time}} <span style="color:#D0CECE;">Раздел <a href="">{{activity.course_part.title}}</a> завершен</span> </div>
                                             {% elif activity.simple_task %}
                                                 <div class="activity-item">{{activity.time}} <span style="color:#D0CECE;">Задача <a href="">{{activity.simple_task.title}}</a> решена</span> </div>
+                                            {% elif activity.quiz %}
+                                                <div class="activity-item">{{activity.time}} <span style="color:#D0CECE;">Квиз <a href="">{{activity.quiz.title}}</a> решен</span> </div>
                                             {% endif %}
                                       {% endfor %}
                                   </div>

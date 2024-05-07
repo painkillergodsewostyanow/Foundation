@@ -8,8 +8,13 @@
             {% for course in request.user.teacher.course_set.all %}
             <div class="col-lg-6 col-sm-12 col-xl-6 col-xxl-4">
                 <div class="card">
-                    <img src="{{course.image.url}}"
-                         class="card-img-top">
+
+                    {% if course.image %}
+                    <img src="{{course.image.url}}" class="card-img-top">
+                    {% else %}
+                        <img src="" class="card-img-top" alt="default photo">
+                    {% endif %}
+
                     <div class="card-body">
                         <h5 class="card-title">{{course.title}}</h5>
                         <div class="card-detail d-flex justify-content-between">
@@ -31,38 +36,40 @@
                 </div>
             </div>
         </div>
+        {% if manual_test_objs|length > 0 %}
         <div class="row mt-5">
             <h1>Задания отправленные на ручную проверку</h1>
             <div class="col-12">
                 <div class="card">
                     <div class="card-body">
                         {% for obj in manual_test_objs %}
-                        <div class="col-12" id="{{obj.pk}}">
-                            <div class="card">
-                                <div style="padding: 20px; font-size: 24px;" class="body">
-                                    Студент: <a href="{% url 'users_app:profile' obj.pk %}">{{obj.student}}</a>
-                                    Задача: <a href="{% url 'education_app:update_simple_task' obj.simple_task.pk %}">{{obj.simple_task.title}}</a>
-                                    Ответ студента: {{obj.answer}}
+                            <div class="col-12" id="{{obj.pk}}">
+                                <div class="card">
+                                    <div style="padding: 20px; font-size: 24px;" class="body">
+                                        Студент: <a href="{% url 'users_app:profile' obj.pk %}">{{obj.student}}</a>
+                                        Задача: <a href="{% url 'education_app:update_simple_task' obj.simple_task.pk %}">{{obj.simple_task.title}}</a>
+                                        Ответ студента: {{obj.answer}}
+                                    </div>
+
+                                    <form action="{% url 'education_app:confirm' %}" method="POST">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="manual_test_id" value="{{obj.pk}}">
+                                        <button type="submit" class="btn w-100">Подтвердить</button>
+                                    </form>
+
+                                    <form action="{% url 'education_app:reject' %}" method="POST">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="manual_test_id" value="{{obj.pk}}">
+                                        <button type="submit" class="btn mt-1 w-100">Отклонить</button>
+                                    </form>
+
                                 </div>
-
-                                <form action="{% url 'education_app:confirm' %}" method="POST">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="manual_test_id" value="{{obj.pk}}">
-                                    <button type="submit" class="btn w-100">Подтвердить</button>
-                                </form>
-
-                                <form action="{% url 'education_app:reject' %}" method="POST">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="manual_test_id" value="{{obj.pk}}">
-                                    <button type="submit" class="btn mt-1 w-100">Отклонить</button>
-                                </form>
-
                             </div>
-                        </div>
                         {% endfor %}
                     </div>
                 </div>
             </div>
         </div>
+        {% endif %}
     </div>
 {% endblock %}

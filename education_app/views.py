@@ -3,9 +3,10 @@ from django.db.models.functions import Coalesce
 from django.http import HttpResponse, Http404
 from django.shortcuts import render, get_object_or_404, reverse, redirect
 from django.views.generic import UpdateView, DetailView, CreateView, DeleteView, ListView, View
-from .forms import CourseForm, CoursePartForm, LessonForm, AnswerToSimpleTaskForm, SimpleTaskForm
+from .forms import CourseForm, CoursePartForm, LessonForm, AnswerToSimpleTaskForm, SimpleTaskForm, QuizForm, AnswerForm
 from .models import (Course, CoursePart, Lesson, SimpleTask, StudentThatSolvedLessonM2M, StudentThatSolvedCoursePartM2M,
-                     StudentThatSolvedSimpleTaskM2M, SimpleTaskToManualTest)
+                     StudentThatSolvedSimpleTaskM2M, SimpleTaskToManualTest, QuizQuestion, Answer,
+                     StudentThatSolvedQuizM2M)
 
 
 def dashboard(request):
@@ -17,7 +18,6 @@ def dashboard(request):
 class TeacherDashboard(View):
 
     def get(self, request, *args, **kwargs):
-
         manual_test_objs = (
             SimpleTaskToManualTest.objects
             .filter(simple_task__lesson__course_part__course__author=request.user.teacher)
@@ -41,7 +41,10 @@ class StudentDashboard(View):
         solved_simpletask = StudentThatSolvedSimpleTaskM2M.objects.filter(student=student).select_related(
             'simple_task')[:5]
 
-        activity_list = sorted(list(solved_course_parts) + list(solved_lessons) + list(solved_simpletask),
+        solved_quiz = StudentThatSolvedQuizM2M.objects.filter(student=student).select_related(
+            'quiz')[:5]
+
+        activity_list = sorted(list(solved_quiz) + list(solved_course_parts) + list(solved_lessons) + list(solved_simpletask),
                                key=lambda x: x.time)
 
         sub_query_get_last_solved_lesson = Lesson.objects.filter(
@@ -229,7 +232,8 @@ class CoursePartUpdateView(UpdateView):
         return self.object
 
     def get_queryset(self):
-        return CoursePart.objects.select_related('course').prefetch_related('lesson_set').select_related('course__author')
+        return CoursePart.objects.select_related('course').prefetch_related('lesson_set').select_related(
+            'course__author')
 
 
 class CoursePartDeleteView(DeleteView):
@@ -304,7 +308,7 @@ class LessonUpdateView(UpdateView):
             .prefetch_related('course_part__course__author')
             .prefetch_related('simpletask_set')
             .filter(course_part__course__author=self.request.user.teacher)
-            )
+        )
 
     def get_object(self, queryset=None):
         if not hasattr(self, 'object'):
@@ -324,7 +328,12 @@ class LessonDetailView(DetailView):
         if not lesson.student_has_access(self.request.user):
             raise Http404()
 
-        simple_tasks = lesson.simpletask_set.all()
+        simple_tasks = lesson.simpletask_set.all().prefetch_related('students_that_solved')
+        quizs = lesson.quizquestion_set.all().prefetch_related('answer_set')
+
+        theory_quiz = list(filter(lambda x: x.place == 1, quizs))
+        practice_quiz = list(filter(lambda x: x.place == 2, quizs))
+        video_quiz = list(filter(lambda x: x.place == 3, quizs))
 
         theory_task = list(filter(lambda x: x.place == 1, simple_tasks))
         practice_task = list(filter(lambda x: x.place == 2, simple_tasks))
@@ -332,16 +341,21 @@ class LessonDetailView(DetailView):
 
         course_parts = lesson.course_part.course.coursepart_set.prefetch_related('lesson_set').all()
 
-        if not simple_tasks:
+        if not simple_tasks and not quizs:
             lesson.students_that_solved.add(request.user)
 
-        return render(request, self.template_name,
-                      context={
-                          'theory_task': theory_task, 'practice_task': practice_task,
-                          'video_task': video_task, 'object': lesson,
-                          'lesson_count': lesson.lessons_count,
-                          'course_parts': course_parts
-                      })
+        return render(
+            request,
+            self.template_name,
+            context={
+                'theory_task': theory_task, 'practice_task': practice_task,
+                'video_task': video_task, 'object': lesson,
+                'lesson_count': lesson.lessons_count,
+                'course_parts': course_parts,
+                'theory_quiz': theory_quiz, 'practice_quiz': practice_quiz,
+                'video_quiz': video_quiz
+            }
+        )
 
     def get_queryset(self):
         return (
@@ -422,6 +436,18 @@ class SimpleTaskUpdateView(UpdateView):
         return self.object
 
 
+class SimpleTaskDeleteView(DeleteView):
+    model = SimpleTask
+    template_name = 'education_app/lesson/confirm_delete.html'
+
+    def post(self, request, *args, **kwargs):
+        simple_task = self.get_object()
+        self.success_url = reverse('education_app:update_course_part', kwargs={'course_part_id': simple_task.lesson.course_part.pk})
+        if not simple_task.lesson.course_part.course.is_owner(self.request.user.teacher):
+            raise Http404()
+        return super().post(request, args, kwargs)
+
+
 def answer_to_simple_task(request):
     if request.method == 'POST':
         form = AnswerToSimpleTaskForm(data=request.POST, student=request.user)
@@ -432,9 +458,135 @@ def answer_to_simple_task(request):
                 return HttpResponse('К сожалению вы допустили ошибку')
 
             send_result = form.send_to_manual_test()
-            if isinstance(send_result, (bool, )):
+            if isinstance(send_result, (bool,)):
                 return HttpResponse('ваш ответ отправлен на ручную проверку')
             return HttpResponse(send_result)
+
+    raise Http404()
+
+
+class QuizCreateView(CreateView):
+    form_class = QuizForm
+    template_name = 'education_app/quiz/create.html'
+
+    def get(self, request, *args, **kwargs):
+        lesson = get_object_or_404(Lesson, id=self.kwargs.get('lesson_id'))
+        if lesson.course_part.course.is_owner(request.user.teacher):
+            return super().get(request, args, kwargs)
+        raise Http404()
+
+    def post(self, request, *args, **kwargs):
+        lesson = get_object_or_404(Lesson, id=self.kwargs.get('lesson_id'))
+        self.success_url = self.success_url = reverse('education_app:update_lesson', kwargs={'lesson_id': lesson.pk})
+
+        if lesson.course_part.course.is_owner(request.user.teacher):
+            return super().post(request, args, kwargs)
+        raise Http404()
+
+    def form_valid(self, form):
+        lesson = get_object_or_404(Lesson, id=self.kwargs.get('lesson_id'))
+        form.instance.lesson = lesson
+        form.save()
+        return super().form_valid(form)
+
+
+class QuizUpdateView(UpdateView):
+    form_class = QuizForm
+    template_name = 'education_app/quiz/update.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(QuizUpdateView, self).get_context_data(**kwargs)
+        context.update({
+            'add_answer_form': AnswerForm()
+        })
+        return context
+
+    def get(self, request, *args, **kwargs):
+        quiz = self.get_object()
+        if not quiz.lesson.course_part.course.is_owner(request.user.teacher):
+            raise Http404
+        return super().get(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        quiz = self.get_object()
+        self.success_url = self.success_url = reverse('education_app:update_lesson',
+                                                      kwargs={'lesson_id': quiz.lesson.pk})
+        if not quiz.lesson.course_part.course.is_owner(request.user.teacher):
+            raise Http404
+        return super().post(request, *args, **kwargs)
+
+    def get_object(self, **kwargs):
+        if not hasattr(self, 'object'):
+            simple_task_id = self.kwargs.get('quiz_id')
+            self.object = get_object_or_404(QuizQuestion, id=simple_task_id)
+        return self.object
+
+
+class AnswerToQuizCreateView(CreateView):
+    form_class = AnswerForm
+    template_name = 'education_app/answer_to_quiz/create.html'
+
+    def get(self, request, *args, **kwargs):
+        quiz = get_object_or_404(QuizQuestion, id=self.kwargs.get('quiz_pk'))
+        self.success_url = self.success_url = reverse('education_app:update_quiz', kwargs={'quiz_id': quiz.pk})
+
+        if quiz.lesson.course_part.course.is_owner(request.user.teacher):
+            return super().post(request, args, kwargs)
+        raise Http404()
+
+    def post(self, request, *args, **kwargs):
+        quiz = get_object_or_404(QuizQuestion, id=self.kwargs.get('quiz_pk'))
+        self.success_url = self.success_url = reverse('education_app:update_quiz', kwargs={'quiz_id': quiz.pk})
+
+        if quiz.lesson.course_part.course.is_owner(request.user.teacher):
+            return super().post(request, args, kwargs)
+        raise Http404()
+
+    def form_valid(self, form):
+        quiz = get_object_or_404(QuizQuestion, id=self.kwargs.get('quiz_pk'))
+        form.instance.question = quiz
+        form.save()
+        return super().form_valid(form)
+
+
+class AnswerToQuizUpdateView(UpdateView):
+    form_class = AnswerForm
+    template_name = 'education_app/answer_to_quiz/update.html'
+
+    def get(self, request, *args, **kwargs):
+        quiz = self.get_object().question
+
+        if quiz.lesson.course_part.course.is_owner(request.user.teacher):
+            return super().post(request, args, kwargs)
+        raise Http404()
+
+    def post(self, request, *args, **kwargs):
+        quiz = self.get_object().question
+        self.success_url = self.success_url = reverse('education_app:update_quiz', kwargs={'quiz_id': quiz.pk})
+
+        if quiz.lesson.course_part.course.is_owner(request.user.teacher):
+            return super().post(request, args, kwargs)
+        raise Http404()
+
+    def get_object(self, queryset=None):
+        if not hasattr(self, 'object'):
+            self.object = get_object_or_404(Answer, id=self.kwargs.get('quiz_answer_id'))
+        return self.object
+
+
+def answer_to_quiz(request):
+    if request.method == 'POST':
+        quiz = get_object_or_404(QuizQuestion, id=request.POST.get('quiz', None))
+        if quiz.lesson.student_has_access(request.user):
+            answers_ids = list(map(int, request.POST.getlist('answers')))
+            selected_answers = quiz.answer_set.filter(pk__in=answers_ids)
+            right_answers = quiz.answer_set.filter(is_correct=True)
+
+            if set(selected_answers) == set(right_answers):
+                quiz.students_that_solved.add(request.user)
+                return HttpResponse('Правильно')
+
+            return HttpResponse('Не верно')
 
     raise Http404()
 

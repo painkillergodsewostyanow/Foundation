@@ -6,7 +6,7 @@ from django.views import View
 from django.views.generic import DetailView, UpdateView
 
 from education_app.models import StudentThatSolvedCoursePartM2M, StudentThatSolvedLessonM2M, \
-    StudentThatSolvedSimpleTaskM2M, Lesson, Course
+    StudentThatSolvedSimpleTaskM2M, Lesson, Course, StudentThatSolvedQuizM2M
 from .forms import *
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponse
@@ -68,7 +68,10 @@ class ProfileView(DetailView):
         solved_simpletask = StudentThatSolvedSimpleTaskM2M.objects.filter(student=student).select_related(
             'simple_task')[:5]
 
-        activity_list = sorted(list(solved_course_parts) + list(solved_lessons) + list(solved_simpletask),
+        solved_quiz = StudentThatSolvedQuizM2M.objects.filter(student=student).select_related(
+            'quiz')[:5]
+
+        activity_list = sorted(list(solved_quiz) + list(solved_course_parts) + list(solved_lessons) + list(solved_simpletask),
                                key=lambda x: x.time)
 
         sub_query_get_last_solved_lesson = Lesson.objects.filter(

@@ -9,7 +9,12 @@
                 <div class="card">
 
                     <div class="">
-                        <img src="{{object.image.url}}" class="card-img-top">
+                        {% if object.image %}
+                            <img src="{{object.image.url}}" class="card-img-top">
+                        {% else %}
+                            <img src="" class="card-img-top" alt="default photo">
+                        {% endif %}
+
                     </div>
 <!--                    TODO(ORM OPTIMIZE)-->
                         <div class="card-body">

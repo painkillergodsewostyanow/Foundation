@@ -289,6 +289,49 @@ class SimpleTask(models.Model):
         return super().delete(using, keep_parents)
 
 
+# QUIZ TASK
+
+class QuizQuestion(models.Model):
+    title = models.CharField(max_length=255)
+    place = models.SmallIntegerField(
+        choices=(
+            (1, "Раздел теории"),
+            (2, "Раздел практики"),
+            (3, "Раздел видео")
+        )
+    )
+    lesson = models.ForeignKey(Lesson, on_delete=models.PROTECT)
+    question = models.CharField(max_length=500)
+    hint = models.CharField(max_length=255)
+
+    students_that_solved = models.ManyToManyField(
+        blank=True, null=True,
+        to=User, through='StudentThatSolvedQuizM2M'
+    )
+
+    class Meta:
+        verbose_name = 'Задание с вариантами ответов'
+        verbose_name_plural = 'Задания с вариантами ответов'
+
+
+class Answer(models.Model):
+    question = models.ForeignKey(QuizQuestion, on_delete=models.PROTECT)
+    is_correct = models.BooleanField()
+    text = models.CharField(max_length=255)
+
+    class Meta:
+        verbose_name = 'Ответ на задание с вариантами ответов'
+        verbose_name_plural = 'Ответы на задания с вариантами ответов'
+
+# QUIZ TASK
+
+
+class StudentThatSolvedQuizM2M(models.Model):
+    student = models.ForeignKey(User, on_delete=models.PROTECT)
+    quiz = models.ForeignKey(QuizQuestion, on_delete=models.PROTECT)
+    time = models.DateTimeField(auto_now_add=True)
+
+
 class StudentThatSolvedSimpleTaskM2M(models.Model):
     student = models.ForeignKey(User, on_delete=models.PROTECT)
     simple_task = models.ForeignKey(SimpleTask, on_delete=models.PROTECT)
@@ -316,3 +359,5 @@ class SimpleTaskToManualTest(models.Model):
         self.simple_task.students_that_solved.add(self.student)
         SimpleTaskToManualTest.objects.filter(student=self.student, simple_task=self.simple_task).delete()
         self.delete()
+
+

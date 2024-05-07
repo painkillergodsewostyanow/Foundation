@@ -1,10 +1,35 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
-</head>
-<body>
-$END$
-</body>
-</html>
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="content">
+    <div class="container">
+        <form class="custom-form" style="margin-top:20px;" method="POST">
+            <div class="row">
+                {{form.errors}}
+                {% csrf_token %}
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        {{form.place}}
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <div class="mb-3">
+                        {{form.title}}
+                    </div>
+                </div>
+                <div class="col-md-12">
+                    <div class="mb-3">
+                        {{form.hint}}
+                    </div>
+                </div>
+                <div class="col-md-12">
+                    <div class="mb-3">
+                        {{form.question}}
+                    </div>
+                </div>
+            </div>
+            <button class="btn float-end" style="margin-top:20px;">Сохранить</button>
+        </form>
+    </div>
+</section>
+{% endblock %}

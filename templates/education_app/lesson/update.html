@@ -62,12 +62,32 @@
                             </span>
                             <span style="float:right;">
                                 <a
-                                    href="{% url 'education_app:update_simple_task' simple_task.pk %}">Удалить
+                                    href="{% url 'education_app:delete_simple_task' simple_task.pk %}">Удалить
                                 </a>
                             </span>
                         </li>
                     {% endfor %}
                     <li class="list-group-item"><a href="{% url 'education_app:create_simple_task' object.pk %}">Добавить задачу</a></li>
+                </ul>
+            </div>
+            <div class="col-md-12" style="border-radius: 12px; margin-top:60px;">
+                <h4 style="color:white;">Задачи с вариантами ответов</h4>
+                <ul id="sortable" class="sortable-list">
+                    {% for quiz in object.quizquestion_set.all %}
+                        <li class="list-group-item">{{quiz.title}}
+                            <span style="float:right;">
+                                <a
+                                    href="{% url 'education_app:update_quiz' quiz.pk %}">Изменить
+                                </a>
+                            </span>
+                            <span style="float:right;">
+                                <a
+                                    href="">Удалить
+                                </a>
+                            </span>
+                        </li>
+                    {% endfor %}
+                    <li class="list-group-item"><a href="{% url 'education_app:create_quiz' object.pk %}">Добавить квиз</a></li>
                 </ul>
             </div>
         </div>
