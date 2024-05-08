@@ -74,7 +74,7 @@
                         {{object.theory|safe}}
                     </div>
 
-                    {% if theory_task|length > 0 or theory_quiz|length > 0 %}
+                    {% if theory_task|length > 0 or theory_quiz|length > 0 or theory_task_w_file|length > 0 %}
                         <div class="questions">
                             <h2 style="text-align: center;">Для завершения урока решите задачи</h2>
                             <hr class="border-2 border-top" style="border-color:gray;"/>
@@ -171,7 +171,51 @@
                                                               </label>
                                                         </div>
                                                         {% endfor %}
-                                                        <button type="submit" class="btn">Проверить</button>
+                                                        <button type="submit" class="btn mt-2">Проверить</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+
+                                {% for task_w_file in theory_task_w_file %}
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                                    data-bs-target="#task_w_file_{{task_w_file.pk}}" aria-expanded="true" aria-controls="{{task_w_file.pk}}">
+                                                <h4>
+                                                    {{task_w_file.title}}
+                                                    {% if request.user in task_w_file.students_that_solved.all %}
+                                                        <span class="badge text-bg-success" style="margin-left: 20px;">Solved!</span>
+                                                    {% endif %}
+                                                </h4>
+                                            </button>
+                                        </h2>
+                                        <div id="task_w_file_{{task_w_file.pk}}" class="accordion-collapse collapse" data-bs-parent="#theory-task-list">
+                                            <div class="accordion-body">
+                                                <div class="question">
+                                                    <div class="accordion-item hint-item">
+                                                        <h2 class="accordion-header">
+                                                            <button class="accordion-button collapsed" type="button"
+                                                                    data-bs-toggle="collapse" data-bs-target="#task_w_file_{{task_w_file.pk}}_hint"
+                                                                    aria-expanded="true" aria-controls="task_w_file_{{task_w_file.pk}}_hint">
+                                                                <h4>Подсказка</h4>
+                                                            </button>
+                                                        </h2>
+                                                        <div id="task_w_file_{{task_w_file.pk}}_hint" class="accordion-collapse collapse"
+                                                             data-bs-parent="#accordionExample">
+                                                            <div class="accordion-body">
+                                                                <span>{{task_w_file.hint}}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="question-text mb-3">{{task_w_file.description}}</div>
+                                                    <form action="{% url 'education_app:answer_to_task_w_file' %}" method="POST" enctype="multipart/form-data">
+                                                        {% csrf_token %}
+                                                        {{answer_to_task_w_file_form.file}}
+                                                        <input type="hidden" id="task" name="task" value="{{task_w_file.pk}}">
+                                                        <button type="submit" class="btn">Отправить</button>
                                                     </form>
                                                 </div>
                                             </div>

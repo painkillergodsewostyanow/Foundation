@@ -72,7 +72,7 @@ class ProfileView(DetailView):
             'quiz')[:5]
 
         activity_list = sorted(list(solved_quiz) + list(solved_course_parts) + list(solved_lessons) + list(solved_simpletask),
-                               key=lambda x: x.time)
+                               key=lambda x: x.time, reverse=True)
 
         sub_query_get_last_solved_lesson = Lesson.objects.filter(
             course_part__course=OuterRef('pk'),

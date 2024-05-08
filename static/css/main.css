@@ -90,6 +90,14 @@ body {
     color:gray;
 }
 
+.select-btn{
+    border-radius:8px;
+    padding: 18px;
+    text-align:center;
+    background-color:white;
+    cursor: pointer;
+}
+
 .btn.close{
     background-color: #712cf9;
 }

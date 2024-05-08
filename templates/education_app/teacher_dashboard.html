@@ -43,22 +43,41 @@
                 <div class="card">
                     <div class="card-body">
                         {% for obj in manual_test_objs %}
-                            <div class="col-12" id="{{obj.pk}}">
-                                <div class="card">
-                                    <div style="padding: 20px; font-size: 24px;" class="body">
-                                        Студент: <a href="{% url 'users_app:profile' obj.pk %}">{{obj.student}}</a>
-                                        Задача: <a href="{% url 'education_app:update_simple_task' obj.simple_task.pk %}">{{obj.simple_task.title}}</a>
-                                        Ответ студента: {{obj.answer}}
+                            {% if obj.simple_task %}
+                                <div class="col-12" id="{{obj.pk}}">
+                                    <div class="card">
+                                        <div style="padding: 20px; font-size: 24px;" class="body">
+                                            Студент: <a href="{% url 'users_app:profile' obj.pk %}">{{obj.student}}</a>
+                                            Задача: <a href="{% url 'education_app:update_simple_task' obj.simple_task.pk %}">{{obj.simple_task.title}}</a>
+                                            Ответ студента: {{obj.answer}}
+                                        </div>
+                                        <form method="POST" style="padding:20px;">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="manual_test_id" value="simple_task_{{obj.pk}}">
+                                            <input type="text" name="comment" style="font-size:32px;" class="form-control mb-2" placeholder="Комментарий">
+                                            <button formaction="{% url 'education_app:confirm' %}" type="submit" class="btn w-100">Подтвердить</button>
+                                            <button formaction="{% url 'education_app:reject' %}" type="submit" class="btn mt-1 w-100">Отклонить</button>
+                                        </form>
                                     </div>
-                                    <form method="POST" style="padding:20px;">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="manual_test_id" value="{{obj.pk}}">
-                                        <input type="text" name="comment" style="font-size:32px;" class="form-control mb-2" placeholder="Комментарий">
-                                        <button formaction="{% url 'education_app:confirm' %}" type="submit" class="btn w-100">Подтвердить</button>
-                                        <button formaction="{% url 'education_app:reject' %}" type="submit" class="btn mt-1 w-100">Отклонить</button>
-                                    </form>
                                 </div>
-                            </div>
+                            {% elif obj.task %}
+                                <div class="col-12" id="{{obj.pk}}">
+                                    <div class="card">
+                                        <div style="padding: 20px; font-size: 24px;" class="body">
+                                            Студент: <a href="{% url 'users_app:profile' obj.pk %}">{{obj.student}}</a>
+                                            Задача: <a href="{% url 'education_app:update_task_with_file' obj.task.pk %}">{{obj.task.title}}</a>
+                                            Файл студента: <a href="{{obj.file.url}}">{{obj.file}}</a>
+                                        </div>
+                                        <form method="POST" style="padding:20px;">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="manual_test_id" value="task_w_file_{{obj.pk}}">
+                                            <input type="text" name="comment" style="font-size:32px;" class="form-control mb-2" placeholder="Комментарий">
+                                            <button formaction="{% url 'education_app:confirm' %}" type="submit" class="btn w-100">Подтвердить</button>
+                                            <button formaction="{% url 'education_app:reject' %}" type="submit" class="btn mt-1 w-100">Отклонить</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            {% endif %}
                         {% endfor %}
                     </div>
                 </div>

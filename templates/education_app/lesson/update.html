@@ -90,6 +90,21 @@
                     <li class="list-group-item"><a href="{% url 'education_app:create_quiz' object.pk %}">Добавить квиз</a></li>
                 </ul>
             </div>
+            <div class="col-md-12" style="border-radius: 12px; margin-top:60px;">
+                <h4 style="color:white;">Задачи с файлами в ответах</h4>
+                <ul id="sortable" class="sortable-list">
+                    {% for task_w_f in object.taskwithfile_set.all %}
+                        <li class="list-group-item">{{task_w_f.title}}
+                            <span style="float:right;">
+                                <a
+                                    href="{% url 'education_app:update_task_with_file' task_w_f.pk %}">Изменить
+                                </a>
+                            </span>
+                        </li>
+                    {% endfor %}
+                    <li class="list-group-item"><a href="{% url 'education_app:create_task_with_file' object.pk %}">Добавить задачу с файловым ответом</a></li>
+                </ul>
+            </div>
         </div>
     </section>
 {% endblock %}

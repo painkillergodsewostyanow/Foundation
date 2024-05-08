@@ -1,12 +1,14 @@
-from django.db.models import Count, Q, Max, OuterRef, Subquery, IntegerField, F
+from django.db.models import Count, Q, Max, OuterRef, Subquery, IntegerField, F, Case, When
 from django.db.models.functions import Coalesce
 from django.http import HttpResponse, Http404
 from django.shortcuts import render, get_object_or_404, reverse, redirect
 from django.views.generic import UpdateView, DetailView, CreateView, DeleteView, ListView, View
-from .forms import CourseForm, CoursePartForm, LessonForm, AnswerToSimpleTaskForm, SimpleTaskForm, QuizForm, AnswerForm
+from .forms import CourseForm, CoursePartForm, LessonForm, AnswerToSimpleTaskForm, SimpleTaskForm, QuizForm, AnswerForm, \
+    TaskWithFileForm, AnswerToTaskWFileForm
 from .models import (Course, CoursePart, Lesson, SimpleTask, StudentThatSolvedLessonM2M, StudentThatSolvedCoursePartM2M,
                      StudentThatSolvedSimpleTaskM2M, SimpleTaskToManualTest, QuizQuestion, Answer,
-                     StudentThatSolvedQuizM2M)
+                     StudentThatSolvedQuizM2M, TaskWithFile, AnswerToTaskWithFile, StudentThatSolvedTaskWithFileM2M,
+                     StudentThatSolvedCourseM2M)
 
 
 def dashboard(request):
@@ -23,6 +25,12 @@ class TeacherDashboard(View):
             .filter(simple_task__lesson__course_part__course__author=request.user.teacher, status__isnull=True)
             .select_related('simple_task')
             .select_related('student')
+        ) + list(
+            AnswerToTaskWithFile.objects.filter(
+                task__lesson__course_part__course__author=request.user.teacher, status__isnull=True
+            )
+            .select_related('task')
+            .select_related('student')
         )
         manual_test_objs = simple_task_manual_test
 
@@ -36,6 +44,9 @@ class TeacherDashboard(View):
 class StudentDashboard(View):
     def get(self, request, *args, **kwargs):
         student = self.request.user
+
+        solved_courses = StudentThatSolvedCourseM2M.objects.filter(student=student).select_related(
+            'course')[:5]
         solved_course_parts = StudentThatSolvedCoursePartM2M.objects.filter(student=student).select_related(
             'course_part')[:5]
         solved_lessons = StudentThatSolvedLessonM2M.objects.filter(student=student).select_related('lesson')[:5]
@@ -45,15 +56,25 @@ class StudentDashboard(View):
         solved_quiz = StudentThatSolvedQuizM2M.objects.filter(student=student).select_related(
             'quiz')[:5]
 
+        solved_task_w_file = StudentThatSolvedTaskWithFileM2M.objects.filter(student=student).select_related('task')
+
         activity_list = sorted(
-            list(solved_quiz) + list(solved_course_parts) + list(solved_lessons) + list(solved_simpletask),
-            key=lambda x: x.time)
+            list(solved_quiz) + list(solved_course_parts) + list(solved_lessons) + list(solved_simpletask) +
+            list(solved_task_w_file) + list(solved_courses),
+            key=lambda x: x.time, reverse=True
+        )
 
         manual_test_result = list(
             SimpleTaskToManualTest.objects
             .filter(student=student)
             .select_related('simple_task')
             .select_related('simple_task__lesson')
+        ) + list(
+            AnswerToTaskWithFile.objects.filter(
+                student=student
+            )
+            .select_related('task')
+            .select_related('student')
         )
 
         sub_query_get_last_solved_lesson = Lesson.objects.filter(
@@ -173,16 +194,23 @@ class CourseDetailView(DetailView):
         course = context['object']
 
         lessons = Lesson.objects.filter(course_part__course=course).annotate(
-            count_simple_task=Count('simpletask'),
-        ).values('pk', 'video', 'students_that_solved', 'order', 'count_simple_task')
+            count_simple_task=Count('simpletask', distinct=True),
+            count_quiz=Count('quizquestion', distinct=True),
+            count_video=Count(
+                Case(
+                    When(video__isnull=False), then=1, default=1
+                ),
+            )
 
-        count_simple_task = sum(lesson['count_simple_task'] for lesson in lessons)
-        count_video = sum(1 for lesson in lessons if lesson['video'])
-        # TODO(я не могу в аннотации подсчитать количество видео, ибо он считает что у каждого урока есть видео)
+        ).values('pk', 'video', 'students_that_solved', 'order', 'count_quiz', 'count_simple_task', 'count_video')
+
+        count_task = sum(lesson['count_quiz'] + lesson['count_simple_task'] for lesson in lessons)
+        count_video = sum(lesson['count_video'] for lesson in lessons)
+
         student_on_course = self.request.user in course.students.all()
 
         added_context = {
-            'count_simple_task': count_simple_task,
+            'count_simple_task': count_task,
             'count_video': count_video,
             'count_lesson': lessons.count(),
             'count_course_part': course.course_part_count,
@@ -339,7 +367,12 @@ class LessonDetailView(DetailView):
             raise Http404()
 
         simple_tasks = lesson.simpletask_set.all().prefetch_related('students_that_solved')
-        quizs = lesson.quizquestion_set.all().prefetch_related('answer_set')
+        quizs = lesson.quizquestion_set.all().prefetch_related('answer_set').prefetch_related('students_that_solved')
+        task_w_file = lesson.taskwithfile_set.all().prefetch_related('students_that_solved')
+
+        theory_task_w_file = list(filter(lambda x: x.place == 1, task_w_file))
+        practice_task_w_file = list(filter(lambda x: x.place == 2, task_w_file))
+        video_task_w_file = list(filter(lambda x: x.place == 3, task_w_file))
 
         theory_quiz = list(filter(lambda x: x.place == 1, quizs))
         practice_quiz = list(filter(lambda x: x.place == 2, quizs))
@@ -361,10 +394,16 @@ class LessonDetailView(DetailView):
             if request_user_is_teacher == self.get_object().course_part.course.author:
                 request_user_is_owner = True
 
+        answer_to_task_w_file_form = AnswerToTaskWFileForm(student=self.request.user)
+
         return render(
             request,
             self.template_name,
             context={
+                'answer_to_task_w_file_form': answer_to_task_w_file_form,
+                'theory_task_w_file': theory_task_w_file,
+                'practice_task_w_file': practice_task_w_file,
+                'video_task_w_file': video_task_w_file,
                 'theory_task': theory_task, 'practice_task': practice_task,
                 'video_task': video_task, 'object': lesson,
                 'lesson_count': lesson.lessons_count,
@@ -386,10 +425,11 @@ class LessonDetailView(DetailView):
         )
 
     def get_object(self, queryset=None):
-        pk = self.kwargs.get('pk', None)
-        lesson = get_object_or_404(self.get_queryset(), pk=pk)
+        if not hasattr(self, 'object'):
+            pk = self.kwargs.get('pk', None)
+            self.object = get_object_or_404(self.get_queryset(), pk=pk)
 
-        return lesson
+        return self.object
 
 
 class LessonDeleteView(DeleteView):
@@ -467,21 +507,7 @@ class SimpleTaskDeleteView(DeleteView):
         return super().post(request, args, kwargs)
 
 
-def answer_to_simple_task(request):
-    if request.method == 'POST':
-        form = AnswerToSimpleTaskForm(data=request.POST, student=request.user)
-        if form.is_valid():
-            if not form.object.manual_test:
-                if form.check_answer():
-                    return HttpResponse('Правильно!')
-                return HttpResponse('К сожалению вы допустили ошибку')
 
-            send_result = form.send_to_manual_test()
-            if isinstance(send_result, (bool,)):
-                return HttpResponse('ваш ответ отправлен на ручную проверку')
-            return HttpResponse(send_result)
-
-    raise Http404()
 
 
 class QuizCreateView(CreateView):
@@ -593,6 +619,71 @@ class AnswerToQuizUpdateView(UpdateView):
         return self.object
 
 
+class TaskWithFileCreateView(CreateView):
+    form_class = TaskWithFileForm
+    template_name = 'education_app/task_with_file/create.html'
+
+    def get(self, request, *args, **kwargs):
+        lesson = self.get_lesson()
+        if lesson.course_part.course.is_owner(request.user.teacher):
+            return super().get(request, args, kwargs)
+        raise Http404()
+
+    def post(self, request, *args, **kwargs):
+        lesson = self.get_lesson()
+        self.success_url = self.success_url = reverse('education_app:update_lesson', kwargs={'lesson_id': lesson.pk})
+
+        if lesson.course_part.course.is_owner(request.user.teacher):
+            return super().post(request, args, kwargs)
+        raise Http404()
+
+    def form_valid(self, form):
+        lesson = self.get_lesson()
+        form.instance.lesson = lesson
+        form.save()
+        return super().form_valid(form)
+
+    def get_lesson(self):
+        if not hasattr(self, 'lesson'):
+            self.lesson = get_object_or_404(Lesson, id=self.kwargs.get('lesson_id'))
+        return self.lesson
+
+
+class TaskWithFileUpdateView(UpdateView):
+    form_class = TaskWithFileForm
+    template_name = 'education_app/task_with_file/create.html'
+
+    def get(self, request, *args, **kwargs):
+        task_w_file = self.get_object()
+
+        if task_w_file.lesson.course_part.course.is_owner(request.user.teacher):
+            return super().post(request, args, kwargs)
+        raise Http404()
+
+    def post(self, request, *args, **kwargs):
+        task_w_file = self.get_object()
+
+        self.success_url = self.success_url = reverse('education_app:update_lesson', kwargs={'lesson_id': task_w_file.lesson.pk})
+
+        if task_w_file.lesson.course_part.course.is_owner(request.user.teacher):
+            return super().post(request, args, kwargs)
+        raise Http404()
+
+    def get_object(self, queryset=None):
+        if not hasattr(self, 'object'):
+            self.object = get_object_or_404(TaskWithFile, id=self.kwargs.get('pk'))
+        return self.object
+
+
+def answer_answer_to_task_with_file(request):
+    if request.method == "POST":
+        form = AnswerToTaskWFileForm(data=request.POST, files=request.FILES, student=request.user)
+        if form.is_valid():
+            form.save()
+            return HttpResponse('Файл сохранен !')
+        return HttpResponse(form.errors['file'])
+
+
 def answer_to_quiz(request):
     if request.method == 'POST':
         quiz = get_object_or_404(QuizQuestion, id=request.POST.get('quiz', None))
@@ -611,40 +702,80 @@ def answer_to_quiz(request):
 
 
 def manual_reject_answer(request):
+
     if request.method == "POST":
-        manual_test = (
-            SimpleTaskToManualTest.objects
-            .select_related('simple_task__lesson__course_part__course__author')
-            .filter(pk=request.POST['manual_test_id']).first()
-        )
+        manual_test_info = request.POST['manual_test_id']
+
+        if manual_test_info.startswith('task_w_file'):
+            pk = int(manual_test_info[12:])
+            manual_test = (
+                AnswerToTaskWithFile.objects
+                .select_related('task__lesson__course_part__course__author')
+                .filter(pk=pk).first()
+            )
+
+        if manual_test_info.startswith('simple_task_'):
+            pk = int(manual_test_info[12:])
+            manual_test = (
+                SimpleTaskToManualTest.objects
+                .select_related('simple_task__lesson__course_part__course__author')
+                .filter(pk=pk).first()
+            )
 
         comment = request.POST.get('comment', '')
-
         manual_test.comment = comment
         manual_test.save()
 
-        if manual_test.simple_task.lesson.course_part.course.is_owner(request.user.teacher):
+        if manual_test.is_owner(request.user.teacher):
             manual_test.reject()
             return redirect(request.META['HTTP_REFERER'])
-        raise Http404
+        raise Http404()
     raise Http404()
 
 
 def manual_confirm_answer(request):
     if request.method == "POST":
-        manual_test = (
-            SimpleTaskToManualTest.objects
-            .select_related('simple_task__lesson__course_part__course__author')
-            .filter(pk=request.POST['manual_test_id']).first()
-        )
+        manual_test_info = request.POST['manual_test_id']
+
+        if manual_test_info.startswith('task_w_file'):
+            pk = int(manual_test_info[12:])
+            manual_test = (
+                AnswerToTaskWithFile.objects
+                .select_related('task__lesson__course_part__course__author')
+                .filter(pk=pk).first()
+            )
+
+        if manual_test_info.startswith('simple_task_'):
+            pk = int(manual_test_info[12:])
+            manual_test = (
+                SimpleTaskToManualTest.objects
+                .select_related('simple_task__lesson__course_part__course__author')
+                .filter(pk=pk).first()
+            )
 
         comment = request.POST.get('comment', '')
-
         manual_test.comment = comment
         manual_test.save()
 
-        if manual_test.simple_task.lesson.course_part.course.is_owner(request.user.teacher):
+        if manual_test.is_owner(request.user.teacher):
             manual_test.confirm()
             return redirect(request.META['HTTP_REFERER'])
-        raise Http404
+        raise Http404()
+    raise Http404()
+
+
+def answer_to_simple_task(request):
+    if request.method == 'POST':
+        form = AnswerToSimpleTaskForm(data=request.POST, student=request.user)
+        if form.is_valid():
+            if not form.object.manual_test:
+                if form.check_answer():
+                    return HttpResponse('Правильно!')
+                return HttpResponse('К сожалению вы допустили ошибку')
+
+            send_result = form.send_to_manual_test()
+            if isinstance(send_result, (bool,)):
+                return HttpResponse('ваш ответ отправлен на ручную проверку')
+            return HttpResponse(send_result)
+
     raise Http404()

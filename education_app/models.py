@@ -54,7 +54,9 @@ class Course(models.Model):
     def student_has_access(self, student):
         if student.is_teacher():
             return self.author == student.teacher
-        return student in self.students.all()
+        if self.is_published:
+            return student in self.students.all()
+        return False
 
 
 class StudentThatSolvedCourseM2M(models.Model):
@@ -241,6 +243,9 @@ class StudentThatSolvedLessonM2M(models.Model):
         verbose_name_plural = 'Решенные студентами уроки'
 
 
+# SIMPLE TASK
+
+
 class SimpleTask(models.Model):
     class Meta:
         ordering = ["order"]
@@ -259,6 +264,7 @@ class SimpleTask(models.Model):
     title = models.CharField(max_length=255)
     description = models.CharField(max_length=500)
     hint = models.CharField(max_length=255)
+
     right_answer = models.CharField(max_length=255)
     students_that_solved = models.ManyToManyField(
         blank=True, null=True,
@@ -287,49 +293,6 @@ class SimpleTask(models.Model):
             order=F('order') - 1
         )
         return super().delete(using, keep_parents)
-
-
-# QUIZ TASK
-
-class QuizQuestion(models.Model):
-    title = models.CharField(max_length=255)
-    place = models.SmallIntegerField(
-        choices=(
-            (1, "Раздел теории"),
-            (2, "Раздел практики"),
-            (3, "Раздел видео")
-        )
-    )
-    lesson = models.ForeignKey(Lesson, on_delete=models.PROTECT)
-    question = models.CharField(max_length=500)
-    hint = models.CharField(max_length=255)
-
-    students_that_solved = models.ManyToManyField(
-        blank=True, null=True,
-        to=User, through='StudentThatSolvedQuizM2M'
-    )
-
-    class Meta:
-        verbose_name = 'Задание с вариантами ответов'
-        verbose_name_plural = 'Задания с вариантами ответов'
-
-
-class Answer(models.Model):
-    question = models.ForeignKey(QuizQuestion, on_delete=models.PROTECT)
-    is_correct = models.BooleanField()
-    text = models.CharField(max_length=255)
-
-    class Meta:
-        verbose_name = 'Ответ на задание с вариантами ответов'
-        verbose_name_plural = 'Ответы на задания с вариантами ответов'
-
-# QUIZ TASK
-
-
-class StudentThatSolvedQuizM2M(models.Model):
-    student = models.ForeignKey(User, on_delete=models.PROTECT)
-    quiz = models.ForeignKey(QuizQuestion, on_delete=models.PROTECT)
-    time = models.DateTimeField(auto_now_add=True)
 
 
 class StudentThatSolvedSimpleTaskM2M(models.Model):
@@ -363,6 +326,120 @@ class SimpleTaskToManualTest(models.Model):
         self.save()
         self.simple_task.students_that_solved.add(self.student)
 
+    def is_owner(self, teacher):
+        return self.simple_task.lesson.course_part.course.is_owner(teacher)
 
+# SIMPLE TASK
+
+
+# QUIZ TASK
+class QuizQuestion(models.Model):
+    place = models.SmallIntegerField(
+        choices=(
+            (1, "Раздел теории"),
+            (2, "Раздел практики"),
+            (3, "Раздел видео")
+        )
+    )
+
+    lesson = models.ForeignKey(Lesson, on_delete=models.PROTECT)
+    title = models.CharField(max_length=255)
+    description = models.CharField(max_length=500)
+    hint = models.CharField(max_length=255)
+
+    students_that_solved = models.ManyToManyField(
+        blank=True, null=True,
+        to=User, through='StudentThatSolvedQuizM2M'
+    )
+
+    class Meta:
+        verbose_name = 'Задание с вариантами ответов'
+        verbose_name_plural = 'Задания с вариантами ответов'
+
+
+class Answer(models.Model):
+    question = models.ForeignKey(QuizQuestion, on_delete=models.PROTECT)
+    is_correct = models.BooleanField()
+    text = models.CharField(max_length=255)
+
+    class Meta:
+        verbose_name = 'Ответ на задание с вариантами ответов'
+        verbose_name_plural = 'Ответы на задания с вариантами ответов'
+
+
+class StudentThatSolvedQuizM2M(models.Model):
+    student = models.ForeignKey(User, on_delete=models.PROTECT)
+    quiz = models.ForeignKey(QuizQuestion, on_delete=models.PROTECT)
+    time = models.DateTimeField(auto_now_add=True)
+
+# QUIZ TASK
+
+
+class FileExtends(models.Model):
+    extend = models.CharField(max_length=5)
+    name = models.CharField(max_length=255)
+
+    class Meta:
+        verbose_name = 'расширение файла'
+        verbose_name_plural = 'расширения файлов'
+
+    def __str__(self):
+        return self.name
+
+
+# TASK WITH FILES
+class TaskWithFile(models.Model):
+    place = models.SmallIntegerField(
+        choices=(
+            (1, "Раздел теории"),
+            (2, "Раздел практики"),
+            (3, "Раздел видео")
+        )
+    )
+
+    lesson = models.ForeignKey(Lesson, on_delete=models.PROTECT)
+    title = models.CharField(max_length=255)
+    description = models.CharField(max_length=500)
+    hint = models.CharField(max_length=255)
+
+    students_that_solved = models.ManyToManyField(
+        blank=True, null=True,
+        to=User, through='StudentThatSolvedTaskWithFileM2M'
+    )
+
+    allowed_extends = models.ManyToManyField(FileExtends, null=True)
+
+
+def define_upload_path(instance, filename):
+    return '/'.join(['file_answers', instance.task.lesson.course_part.course.title, filename])
+
+
+class AnswerToTaskWithFile(models.Model):
+    task = models.ForeignKey(TaskWithFile, on_delete=models.PROTECT)
+    student = models.ForeignKey(User, on_delete=models.PROTECT)
+    time = models.DateTimeField(auto_now_add=True)
+    file = models.FileField(upload_to=define_upload_path)
+    status = models.BooleanField(null=True, blank=True)
+    comment = models.CharField(max_length=500)
+
+    def reject(self):
+        self.status = False
+        self.save()
+
+    def confirm(self):
+        self.status = True
+        self.save()
+        self.task.students_that_solved.add(self.student)
+
+    def is_owner(self, teacher):
+        return self.task.lesson.course_part.course.is_owner(teacher)
+
+
+class StudentThatSolvedTaskWithFileM2M(models.Model):
+    student = models.ForeignKey(User, on_delete=models.PROTECT)
+    time = models.DateTimeField(auto_now_add=True)
+    task = models.ForeignKey(TaskWithFile, on_delete=models.PROTECT)
+
+# TASK WITH FILES
 
 

@@ -8,8 +8,12 @@
             {% for course in page_obj %}
                 <div class="col-lg-6 col-sm-12 col-xl-6 col-xxl-4">
                     <div class="card">
-                        <img src="{{course.image.url}}"
-                             class="card-img-top">
+                        {% if course.image %}
+                            <img src="{{course.image.url}}" class="card-img-top">
+                        {% else %}
+                            <img src="" class="card-img-top" alt="default photo">
+                        {% endif %}
+
                         <div class="card-body">
                             <h5 class="card-title text-center">{{course.title}}</h5>
                             <div class="card-detail d-flex justify-content-center">

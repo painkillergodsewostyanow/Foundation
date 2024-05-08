@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="content">
+    <div class="container">
+        <form class="custom-form" style="margin-top:20px;" method="POST">
+            <div class="row">
+                {{form.errors}}
+                {% csrf_token %}
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        {{form.place}}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        {{form.title}}
+                    </div>
+                </div>
+
+                <div class="col-md-12">
+                    <div class="mb-3">
+                        {{form.hint}}
+                    </div>
+                </div>
+                <div class="col-md-12">
+                    <div class="mb-3">
+                        {{form.description}}
+                    </div>
+                </div>
+
+                <div class="col-md-4 mb-2">
+                    {{form.allowed_extends}}
+                    <div style="color:white;">Оставьте пустым, что бы пропускались все файлы</div>
+                </div>
+            </div>
+            <button class="btn float-end" style="margin-top:20px;">Сохранить</button>
+        </form>
+    </div>
+</section>
+{% endblock %}

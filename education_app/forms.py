@@ -1,8 +1,9 @@
 from django.utils import timezone
-
+from pathlib import Path
 from django.shortcuts import get_object_or_404
 import re
-from .models import Course, CoursePart, Lesson, SimpleTask, SimpleTaskToManualTest, QuizQuestion, Answer
+from .models import Course, CoursePart, Lesson, SimpleTask, SimpleTaskToManualTest, QuizQuestion, Answer, TaskWithFile, \
+    AnswerToTaskWithFile, FileExtends
 from django import forms
 
 
@@ -44,7 +45,7 @@ class CoursePartForm(forms.ModelForm):
 class LessonForm(forms.ModelForm):
     title = forms.CharField(widget=forms.TextInput(attrs={
         'style': "font-size:32px; text-align: center; font-weight: bold;",
-        'class': "form-control", 'placeholder': "Название раздела"
+        'class': "form-control", 'placeholder': "Название урока"
     }))
 
     video = forms.FileField(required=False, widget=forms.FileInput(attrs={
@@ -130,6 +131,40 @@ class QuizForm(forms.ModelForm):
         fields = ('place', 'title', 'question', 'hint')
 
 
+class TaskWithFileForm(forms.ModelForm):
+    place = forms.ChoiceField(
+        widget=forms.Select(
+            attrs={'style': "font-size:32px;", 'class': "form-select",
+                   'aria-label': "Выберите раздел где будет размещена задача"
+                   }
+        ),
+        choices=(
+          (1, "Раздел теории"),
+          (2, "Раздел практики"),
+          (3, "Раздел видео")
+        )
+    )
+    title = forms.CharField(widget=forms.TextInput(attrs={
+        'style': "font-size:32px;", 'class': "form-control", 'placeholder': "Название"
+    }))
+
+    hint = forms.CharField(widget=forms.TextInput(attrs={
+        'style': "font-size:32px;", 'class': "form-control", 'placeholder': "Подсказка"
+    }))
+    description = forms.CharField(widget=forms.TextInput(attrs={
+        'style': "font-size:32px;", 'class': "form-control", 'placeholder': "Описание"
+    }))
+
+    class Meta:
+        model = TaskWithFile
+        fields = ('place', 'title', 'hint', 'description', 'allowed_extends')
+        widgets = {
+            'allowed_extends': forms.SelectMultiple(
+                attrs={'class': "form-select", 'aria-label': "multiple select example", 'style': 'font-size:32px;'}
+            ),
+        }
+
+
 class AnswerForm(forms.ModelForm):
     text = forms.CharField(widget=forms.TextInput(attrs={
         'style': "font-size:32px;", 'class': "form-control", 'placeholder': "Ответ"
@@ -204,3 +239,43 @@ class AnswerToSimpleTaskForm(forms.Form):
             answer=self.cleaned_data['answer']
         )
         return True
+
+
+class AnswerToTaskWFileForm(forms.ModelForm):
+    def __init__(self, student, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.task_obj = None
+        self.student = student
+
+    task = forms.IntegerField(widget=forms.HiddenInput())
+    file = forms.FileField(widget=forms.FileInput(attrs={'class': 'form-control mb-4', 'style': 'font-size:24px;'}))
+
+    class Meta:
+        model = AnswerToTaskWithFile
+        fields = ('task', 'file')
+
+    def clean(self):
+        self.task_obj = get_object_or_404(TaskWithFile, id=int(self.data['task']))
+
+        if not self.task_obj.lesson.student_has_access(self.student):
+            self.add_error('file', 'Вам не доступен данный урок')
+
+        answers_before = AnswerToTaskWithFile.objects.filter(task=self.task_obj, student=self.student, time__date=timezone.now())
+
+        if answers_before.count() > 5:
+            self.add_error('file', 'Вы превысили лимит ответов на сегодня')
+
+        allowed_extends = list((ex.extend for ex in self.task_obj.allowed_extends.all()))
+
+        if allowed_extends:
+            file = self.files['file']
+            filename = file.name
+
+            if Path(filename).suffix not in allowed_extends:
+                self.add_error('file', f'Не допустимое расширение файла, допустимые расширения: {allowed_extends}')
+
+        return {'task': self.task_obj, 'file': self.files['file']}
+
+    def save(self, commit=True):
+        self.instance.student = self.student
+        # return super().save()

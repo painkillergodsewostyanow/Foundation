@@ -2,7 +2,8 @@ from django.contrib import admin
 
 from .models import Course, CoursePart, Lesson, StudentThatSolvedCourseM2M, StudentThatSolvedCoursePartM2M, \
     StudentThatSolvedLessonM2M, StudentOnCourseM2M, SimpleTask, StudentThatSolvedSimpleTaskM2M, SimpleTaskToManualTest, \
-    QuizQuestion, Answer, StudentThatSolvedQuizM2M
+    QuizQuestion, Answer, StudentThatSolvedQuizM2M, TaskWithFile, AnswerToTaskWithFile, \
+    StudentThatSolvedTaskWithFileM2M, FileExtends
 
 
 @admin.register(Course)
@@ -66,7 +67,7 @@ class StudentThatSolvedSimpleTaskM2MAdmin(admin.ModelAdmin):
 
 @admin.register(QuizQuestion)
 class QuizQuestionAdmin(admin.ModelAdmin):
-    list_display = ('lesson', 'question')
+    list_display = ('lesson', 'description')
 
 
 @admin.register(Answer)
@@ -77,3 +78,24 @@ class AnswerAdmin(admin.ModelAdmin):
 @admin.register(StudentThatSolvedQuizM2M)
 class StudentThatSolvedQuizM2MAdmin(admin.ModelAdmin):
     list_display = ('quiz', 'student', 'time')
+
+
+@admin.register(TaskWithFile)
+class TaskWithFileAdmin(admin.ModelAdmin):
+    list_display = ('lesson', 'description')
+
+
+@admin.register(AnswerToTaskWithFile)
+class AnswerToTaskWithFileAdmin(admin.ModelAdmin):
+    list_display = ('task', 'student', 'time', 'status')
+
+
+@admin.register(StudentThatSolvedTaskWithFileM2M)
+class StudentThatSolvedTaskWithFileM2MAdmin(admin.ModelAdmin):
+    list_display = ('task', 'student', 'time')
+
+
+@admin.register(FileExtends)
+class FileExtendsAdmin(admin.ModelAdmin):
+    list_display = ('name', 'extend')
+
