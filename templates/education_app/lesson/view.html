@@ -4,6 +4,7 @@
 
 {% block head %}
     <link rel="stylesheet" href="{% static 'css/lesson.css' %}">
+<link href="https://vjs.zencdn.net/7.10.2/video-js.css" rel="stylesheet" />
 <!--    <link rel="stylesheet" href="{% static 'codemirror/lib/codemirror.css' %}" />-->
 <!--    <link rel="stylesheet" href="{% static 'codemirror/theme/ayu-dark.css' %}" />-->
 <!--    <script src="{% static 'codemirror/lib/codemirror.js' %}"></script>-->
@@ -308,7 +309,20 @@
 
                 <div class="lesson-content">
                     <div class="lesson-text">
-                        video
+                        <div class="col-6 videoplayer">
+                            <video
+                                    id="video"
+                                    class="video-js"
+                                    controls
+                                    preload="auto"
+                                    width="1000"
+                                    height="800"
+                                    data-setup="{}"
+                            >
+                                <source src="{% url 'education_app:video_stream' object.pk %}" type="video/mp4">
+                            </video>
+                        </div>
+
                     {% if video_task|length > 0 or video_quiz|length > 0 %}
                         <div class="questions">
                             <h2 style="text-align: center;">Для завершения урока решите задачи</h2>
@@ -544,6 +558,16 @@
 <!--        theme: "ayu-dark",-->
 <!--      });-->
 <!--    </script>-->
-
+<script src="https://vjs.zencdn.net/7.10.2/video.min.js"></script>
+<!-- Preloader -->
+<script type="text/javascript">
+    //<![CDATA[
+    $(window).load(function () { // makes sure the whole site is loaded
+        $('#loader').fadeOut(); // will first fade out the loading animation
+        $('#loader-wrapper').delay(350).fadeOut('slow'); // will fade out the white DIV that covers the website.
+        $('body').delay(350).css({'overflow-y': 'visible'});
+    })
+    //]]>
+</script>
     <script src="{% static 'js/lesson_06_04_24.js' %}"></script>
 {% endblock %}

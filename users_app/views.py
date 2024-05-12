@@ -71,8 +71,10 @@ class ProfileView(DetailView):
         solved_quiz = StudentThatSolvedQuizM2M.objects.filter(student=student).select_related(
             'quiz')[:5]
 
-        activity_list = sorted(list(solved_quiz) + list(solved_course_parts) + list(solved_lessons) + list(solved_simpletask),
-                               key=lambda x: x.time, reverse=True)
+        activity_list = sorted(
+            list(solved_quiz) + list(solved_course_parts) + list(solved_lessons) + list(solved_simpletask),
+            key=lambda x: x.time, reverse=True
+        )
 
         sub_query_get_last_solved_lesson = Lesson.objects.filter(
             course_part__course=OuterRef('pk'),
@@ -132,7 +134,7 @@ def registration(request):
                 'users_app/alerts/alert.html',
                 {
                     'title': 'Подтвердите почту',
-                    'msg': 'Для завершения регистрации подтвердите почту, письмо высланно автоматически'
+                    'msg': 'Для завершения регистрации подтвердите почту, письмо выслано автоматически'
                 }
             )
 
@@ -151,7 +153,9 @@ def authorization(request):
     if request.method == 'POST':
         auth_form = LoginForm(data=request.POST)
         if auth_form.is_valid():
-            user = authenticate(username=auth_form.cleaned_data['username'], password=auth_form.cleaned_data['password'])
+            user = authenticate(
+                username=auth_form.cleaned_data['username'], password=auth_form.cleaned_data['password']
+            )
 
             if user is not None:
                 if user.is_active:

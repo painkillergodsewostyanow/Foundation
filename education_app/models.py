@@ -141,7 +141,6 @@ class CoursePart(models.Model):
                 if student not in prev_course_part.students_that_solved.all():
                     return False
             return True
-        # TODO()
 
 
 class StudentThatSolvedCoursePartM2M(models.Model):

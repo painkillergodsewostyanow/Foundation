@@ -44,4 +44,6 @@ urlpatterns = [
     path('<int:pk>', ProfileView.as_view(), name='profile'),
     path('update/', UpdateUser.as_view(), name='update'),
     path('change_pwd', ChangePwdView.as_view(), name='change_pwd')
+
 ]
+

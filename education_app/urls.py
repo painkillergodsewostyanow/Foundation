@@ -1,5 +1,6 @@
 from django.urls import path
 from .views import *
+from .video import get_stream_video
 from .decorators import teacher_required
 from django.contrib.auth.decorators import login_required
 
@@ -34,6 +35,7 @@ urlpatterns = [
     # COURSE PART
 
     # LESSON
+    path('lesson/<int:lesson_id>/stream-video', get_stream_video, name='video_stream'),
     path('course-part/<int:course_part_id>/add-lesson', teacher_required(LessonCreateView.as_view()),
          name='create_lesson'),
 
