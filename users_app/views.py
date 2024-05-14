@@ -6,7 +6,7 @@ from django.views import View
 from django.views.generic import DetailView, UpdateView
 
 from education_app.models import StudentThatSolvedCoursePartM2M, StudentThatSolvedLessonM2M, \
-    StudentThatSolvedSimpleTaskM2M, Lesson, Course, StudentThatSolvedQuizM2M
+    StudentThatSolvedSimpleTaskM2M, Lesson, Course, StudentThatSolvedQuizM2M, StudentThatSolvedCourseM2M
 from .forms import *
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponse
@@ -62,6 +62,10 @@ class ProfileView(DetailView):
         student = self.get_object()
 
         context = super().get_context_data(**kwargs)
+
+        solved_courses = StudentThatSolvedCourseM2M.objects.filter(student=student).select_related(
+            'course')[:5]
+
         solved_course_parts = StudentThatSolvedCoursePartM2M.objects.filter(student=student).select_related(
             'course_part')[:5]
         solved_lessons = StudentThatSolvedLessonM2M.objects.filter(student=student).select_related('lesson')[:5]
@@ -72,7 +76,8 @@ class ProfileView(DetailView):
             'quiz')[:5]
 
         activity_list = sorted(
-            list(solved_quiz) + list(solved_course_parts) + list(solved_lessons) + list(solved_simpletask),
+            list(solved_quiz) + list(solved_course_parts) + list(solved_lessons) + list(solved_simpletask)
+            + list(solved_courses),
             key=lambda x: x.time, reverse=True
         )
 
@@ -84,7 +89,7 @@ class ProfileView(DetailView):
         sub_query_get_next_lesson_pk = Lesson.objects.filter(
             course_part__course=OuterRef('pk'),
             order__gt=OuterRef('last_solved_lesson_order'),  # ORDER ИЗ last_solved_lesson_order
-        ).values('pk')
+        ).values('pk')[:1]
 
         sub_query_get_next_lesson_pk_if_no_one_solved = Lesson.objects.filter(
             course_part__course=OuterRef('pk'),
@@ -157,12 +162,9 @@ def authorization(request):
                 username=auth_form.cleaned_data['username'], password=auth_form.cleaned_data['password']
             )
 
-            if user is not None:
-                if user.is_active:
-                    login(request, user)
-                    return redirect(settings.LOGIN_REDIRECT_URL)
-                else:
-                    return HttpResponse('Аккаунт заблокирован')
+            if user:
+                login(request, user)
+                return redirect(settings.LOGIN_REDIRECT_URL)
 
         return render(
             request,
@@ -227,7 +229,7 @@ class EmailVerify(View):
         return render(
             self.request,
             'users_app/alerts/alert.html',
-            {'title': 'Токен устарел', 'msg': 'Ссылка устарела, залогиньтесь снова, что бы получить новую'})
+            {'title': 'Токен устарел', 'msg': 'Ссылка устарела, авторизуйтесь снова, что бы получить новую'})
 
     @staticmethod
     def get_user(uidb64):

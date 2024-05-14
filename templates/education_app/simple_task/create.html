@@ -5,7 +5,6 @@
     <div class="container">
         <form class="custom-form" style="margin-top:20px;" method="POST">
             <div class="row">
-                {{form.errors}}
                 {% csrf_token %}
                 <div class="col-md-4">
                     <div class="mb-3">
@@ -38,12 +37,12 @@
                 <div class="col-md-6">
                     <div class="form-check">
                         {{form.re_answer}}
-                        <label class="form-check-label" for="re_answer" style="color:gray; font-size:18px;">Указать в качестве ответа регулярное выражение</label>
+                        <label class="form-check-label" for="re_answer" style="color:gray; font-size:24px;">Указать в качестве ответа регулярное выражение</label>
                     </div>
 
                     <div class="form-check">
                         {{form.manual_test}}
-                        <label class="form-check-label" for="manual_test" style="color:gray; font-size:18px;">Проверить ответ в ручную</label>
+                        <label class="form-check-label" for="manual_test" style="color:gray; font-size:24px;">Проверить ответ в ручную</label>
                     </div>
                 </div>
             </div>
@@ -51,4 +50,12 @@
         </form>
     </div>
 </section>
+
+<div class="col-4 errors-second">
+    {% for key, value in form.errors.items  %}
+    <div style="margin: 12px;" class="alert bg" role="alert">
+      {{value}}
+    </div>
+    {% endfor %}
+</div>
 {% endblock %}

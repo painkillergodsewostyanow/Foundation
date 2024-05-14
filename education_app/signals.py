@@ -13,14 +13,11 @@ def check_that_lesson_solved(lesson, student):
     # Если решены все задачи
     if lesson_simple_task.filter(
             students_that_solved=student).count() == lesson_simple_task.count():
-        print('1')
         # Если решены все квизы
         if lesson_quiz.filter(
                 students_that_solved=student).count() == lesson_quiz.count():
-            print('2')
             # Если решены все задачи с файлами
             if lesson_task_with_file.filter(students_that_solved=student).count() == lesson_task_with_file.count():
-                print('3')
                 lesson.students_that_solved.add(student)
 
 

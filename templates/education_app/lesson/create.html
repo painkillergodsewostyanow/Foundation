@@ -5,11 +5,17 @@
 {% endblock %}
 
 {% block content %}
+<div class="errors" style="top:100px;">
+    {% for key, value in form.errors.items  %}
+    <div style="" class="alert bg" role="alert">
+      {{value}}
+    </div>
+    {% endfor %}
+</div>
     <section class="content">
         <div class="container">
             <form class="custom-form" style="margin-top:20px;" method="POST" enctype="multipart/form-data">
                 {% csrf_token %}
-                {{form.errors}}
                 <div class="row">
                     <div class="col-md-12">
                         <div class="mb-3">

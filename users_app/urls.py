@@ -29,7 +29,8 @@ urlpatterns = [
         'pwd-reset-confirm/<uidb64>/<token>',
         PasswordResetConfirmView.as_view(
             template_name='users_app/pwd_reset_confirm.html',
-            success_url=reverse_lazy("users_app:pwd_reset_complete")
+            success_url=reverse_lazy("users_app:pwd_reset_complete"),
+            form_class=ResetPasswordForm
         ),
         name='pwd_reset_confirm'
     ),

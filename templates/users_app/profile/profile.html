@@ -17,7 +17,7 @@
                             {% if object.image %}
                                 <img src="{{object.image.url}}" class="img-fluid" alt="...">
                             {% else %}
-                                <img src="" class="rounded float-start img-fluid" alt="default_photo">
+                                <img src="{% static 'img/default_user.svg' %}" class="img-fluid" alt="default_photo">
                             {% endif %}
                         </div>
                         <div class="user-fio" style="line-break: anywhere;">
@@ -49,7 +49,7 @@
                         <div class="col-12">
                             <div class="card activity">
                               <div class="card-body">
-                                <h5 class="card-title">Ваша активность:</h5>
+                                <h5 class="card-title">Активность:</h5>
                                   <div class="card-text">
                                       {% for activity in activity_list %}
                                             {% if activity.lesson %}
@@ -60,6 +60,8 @@
                                                 <div class="activity-item">{{activity.time}} <span style="color:#D0CECE;">Задача <a href="">{{activity.simple_task.title}}</a> решена</span> </div>
                                             {% elif activity.quiz %}
                                                 <div class="activity-item">{{activity.time}} <span style="color:#D0CECE;">Квиз <a href="">{{activity.quiz.title}}</a> решен</span> </div>
+                                            {% elif activity.course %}
+                                                <div class="activity-item">{{activity.time}} <span style="color:#D0CECE;">Курс <a href="">{{activity.course.title}}</a> завершен</span> </div>
                                             {% endif %}
                                       {% endfor %}
                                   </div>
@@ -69,7 +71,7 @@
                     <div class="col-12">
                             <div class="card courses">
                       <div class="card-body">
-                        <h5 class="card-title">Ваши курсы:</h5>
+                        <h5 class="card-title">Курсы:</h5>
                         <div class="card-text">
                             {% for course in courses %}
                                 <div class="card">
@@ -85,9 +87,9 @@
                                       <div class="col-auto">
                                           {% if course.next_lesson_pk %}
                                             {% if course.percent_ready == 100 %}
-                                                <a href="{% url 'education_app:lesson' course.next_lesson_pk %}" class="btn continue align-middle">Завершен <span class="badge rounded-pill bg-success">{{course.percent_ready}}%</span></a>
+                                                <span class="badge rounded-pill bg-success">{{course.percent_ready}}%</span>
                                             {% else %}
-                                                <a href="{% url 'education_app:lesson' course.next_lesson_pk %}" class="btn continue align-middle">Продолжить <span class="badge rounded-pill text-bg-secondary">{{course.percent_ready}}%</span></a>
+                                                <span class="badge rounded-pill text-bg-secondary">{{course.percent_ready}}%</span>
                                             {% endif %}
                                           {% endif %}
                                       </div>

@@ -2,8 +2,27 @@ from django import forms
 from django.contrib.auth import authenticate
 from .models import *
 from django.shortcuts import get_object_or_404
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, UserChangeForm, PasswordChangeForm
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, UserChangeForm, PasswordChangeForm, \
+    SetPasswordForm
 from django.http import Http404
+
+
+class ResetPasswordForm(SetPasswordForm):
+    new_password1 = forms.CharField(
+
+        widget=forms.PasswordInput(attrs={
+            'style': "font-size:24px; text-align: center; font-weight: bold;",
+            'class': "form-control", 'placeholder': "Введите новый пароль"
+        }),
+        strip=False,
+    )
+    new_password2 = forms.CharField(
+        strip=False,
+        widget=forms.PasswordInput(attrs={
+            'style': "font-size:24px; text-align: center; font-weight: bold;",
+            'class': "form-control", 'placeholder': "Повторите пароль"
+        })
+    )
 
 
 class ChangePasswordForm(PasswordChangeForm):
@@ -135,12 +154,7 @@ class RegistrationForm(UserCreationForm):
 
     username = forms.CharField(
         label='',
-        widget=forms.TextInput(
-            attrs={
-                'class': "form__input",
-                'placeholder': 'Введите имя пользователя',
-            }
-        )
+        widget=forms.TextInput(attrs={'class': "form__input",'placeholder': 'Введите имя пользователя',})
     )
 
     email = forms.EmailField(

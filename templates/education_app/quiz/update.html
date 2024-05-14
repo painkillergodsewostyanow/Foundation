@@ -25,7 +25,6 @@
     <div class="container">
         <form class="custom-form" style="margin-top:20px;" method="POST">
             <div class="row">
-                {{form.errors}}
                 {% csrf_token %}
                 <div class="col-md-4">
                     <div class="mb-3">
@@ -76,6 +75,18 @@
             </div>
     </div>
 </section>
+<div class="col-4 errors-second">
+    {% for key, value in form.errors.items  %}
+    <div style="margin: 12px;" class="alert bg" role="alert">
+      {{value}}
+    </div>
+    {% endfor %}
+    {% for key, value in add_answer_form.errors.items  %}
+    <div style="margin: 12px;" class="alert bg" role="alert">
+      {{value}}
+    </div>
+    {% endfor %}
+</div>
 
 <div class="modal fade" id="addAnswer" tabindex="-1" role="dialog" aria-labelledby="addCoursePart" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" role="document">
@@ -85,7 +96,6 @@
       </div>
       <div class="modal-body">
         <form action="{% url 'education_app:create_answer_to_quiz' object.pk %}" class="custom-form" style="margin-top:20px;" method="POST">
-            {{add_answer_form.errors}}
             {% csrf_token %}
             <div class="row">
                 <div class="col-md-8">

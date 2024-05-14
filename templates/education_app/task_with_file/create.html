@@ -5,7 +5,6 @@
     <div class="container">
         <form class="custom-form" style="margin-top:20px;" method="POST">
             <div class="row">
-                {{form.errors}}
                 {% csrf_token %}
                 <div class="col-md-4">
                     <div class="mb-3">
@@ -38,4 +37,12 @@
         </form>
     </div>
 </section>
+
+<div class="col-4 errors-second">
+    {% for key, value in form.errors.items  %}
+    <div style="margin: 12px;" class="alert bg" role="alert">
+      {{value}}
+    </div>
+    {% endfor %}
+</div>
 {% endblock %}

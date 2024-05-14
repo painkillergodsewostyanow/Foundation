@@ -52,7 +52,7 @@ body {
 
 .card img{
     height: 200px;
-    object-fit: cover;
+    object-fit: fill;
 }
 
 .card {
@@ -86,9 +86,29 @@ body {
     color:gray;
 }
 
-.errorlist{
-    color:gray;
+.errors{
+    left: 0;
+    top: 0;
+    position: absolute;
+    padding-bottom: 10px;
+    padding-left: 4px;
+    z-index: 99999;
 }
+.errors-second{
+    left: 0;
+    bottom: 0;
+    position: absolute;
+    z-index: 99999;
+}
+
+.bg{
+    background-color: #712cf9;
+    color:white;
+}
+.errors li{
+    list-style-type: none;
+}
+
 
 .select-btn{
     border-radius:8px;

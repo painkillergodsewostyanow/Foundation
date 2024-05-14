@@ -1,3 +1,6 @@
+{% load static %}
+
+
 <nav class="navbar navbar-expand-lg background-color-second">
     <div class="container-fluid">
         <a class="navbar-brand" href="{% url 'education_app:dashboard' %}">FOUNDATION</a>
@@ -19,7 +22,7 @@
                         {% if request.user.image %}
                         <img src="{{request.user.image.url}}" alt="Bootstrap" width="46" height="46" style="border-radius: 12px; margin-left: 12px;">
                         {% else %}
-                        <img src="" alt="default_photo" width="46" height="46" style="border-radius: 12px; margin-left: 12px;">
+                        <img src="{% static 'img/default_user.svg' %}" alt="" width="46" height="46" style="border-radius: 12px; margin-left: 12px;">
                         {% endif %}
                     </a>
 

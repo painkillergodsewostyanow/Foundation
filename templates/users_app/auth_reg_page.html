@@ -4,11 +4,31 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-iYQeCzEYFbKjA/T2uDLTpkwGzCiq6soy8tYaI1GyVh/UjpbCx/TYkiZhlZB6+fzT" crossorigin="anonymous">
     <link rel="stylesheet" href="{% static 'css/auth_reg_form_style.css' %}">
+
     <title>Авторизация/Регистрация</title>
     <script src="{% static 'js/auth_reg_form.js' %}" defer></script>
 </head>
 <body>
+<div class="errors">
+    {% for key, value in auth_form.errors.items  %}
+    <div style="" class="alert bg" role="alert">
+      {{value}}
+    </div>
+    {% endfor %}
+    {% for key, value in reset_pwd_request_form.errors.items %}
+    <div style="" class="alert bg" role="alert">
+      {{value}}
+    </div>
+    {% endfor %}
+    {% for key, value in reg_form.errors.items %}
+    <div style="" class="alert bg" role="alert">
+      {{value}}
+    </div>
+    {% endfor %}
+</div>
 
     <article class="container">
         <div class="block">
@@ -35,8 +55,13 @@
         {% endif %}
 
                 <h3 class="form__title">Вход</h3>
-                {{auth_form.errors}}
-                {{auth_form.as_p}}
+                <div class="col">
+                    {{auth_form.username}}
+                </div>
+                <div class="col">
+                    {{auth_form.password}}
+                </div>
+
                 {% csrf_token %}
                 <button class="form__btn">Войти</button> </p>
                 <p class="form__forgot">Восстановить пароль</p>
@@ -50,8 +75,6 @@
 
                 <h3 class="form__title">Восстановление пароля</h3>
                 {% csrf_token %}
-                {{reset_pwd_request_form.errors}}
-                {{reset_pwd_request_form.errors}}
                 <p>{{reset_pwd_request_form.email}}</p>
                 <button class="form__btn">Отправить</button> </p>
                 <p class="form__signin"> Войти </p>
@@ -60,7 +83,6 @@
             <form action="{% url 'users_app:registration' %}" class="form form_signup"  method="post" >
                 <h3 class="form__title">Регистрация</h3>
                 {% csrf_token %}
-                {{reg_form.errors}}
                 <p>{{reg_form.username}}</p>
                 <p>{{reg_form.email}}</p>
                 <p>{{reg_form.password1}}</p>

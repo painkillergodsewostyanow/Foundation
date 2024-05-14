@@ -9,6 +9,7 @@ from .models import (Course, CoursePart, Lesson, SimpleTask, StudentThatSolvedLe
                      StudentThatSolvedSimpleTaskM2M, SimpleTaskToManualTest, QuizQuestion, Answer,
                      StudentThatSolvedQuizM2M, TaskWithFile, AnswerToTaskWithFile, StudentThatSolvedTaskWithFileM2M,
                      StudentThatSolvedCourseM2M)
+from django.contrib import messages
 
 
 def dashboard(request):
@@ -85,11 +86,11 @@ class StudentDashboard(View):
         sub_query_get_next_lesson_pk = Lesson.objects.filter(
             course_part__course=OuterRef('pk'),
             order__gt=OuterRef('last_solved_lesson_order'),  # ORDER ИЗ last_solved_lesson_order
-        ).values('pk')
+        ).values('pk')[:1]
 
         sub_query_get_next_lesson_pk_if_no_one_solved = Lesson.objects.filter(
             course_part__course=OuterRef('pk'),
-        ).values('pk')[0:1]
+        ).values('pk')[:1]
 
         courses = Course.objects.filter(students=student).select_related('author__user').annotate(
             percent_ready=(
@@ -121,7 +122,7 @@ def signup_for_course(request):
         course_id = request.POST.get('course_id', None)
         course = get_object_or_404(Course, id=course_id)
         course.sing_up(request.user)
-        return HttpResponse('Успешно')
+        return redirect(reverse('education_app:course_preview', args=(course_id,)))
     raise Http404
 
 
@@ -196,16 +197,10 @@ class CourseDetailView(DetailView):
         lessons = Lesson.objects.filter(course_part__course=course).annotate(
             count_simple_task=Count('simpletask', distinct=True),
             count_quiz=Count('quizquestion', distinct=True),
-            count_video=Count(
-                Case(
-                    When(video__isnull=False), then=1, default=1
-                ),
-            )
-
-        ).values('pk', 'video', 'students_that_solved', 'order', 'count_quiz', 'count_simple_task', 'count_video')
+        ).values('pk', 'video', 'students_that_solved', 'order', 'count_quiz', 'count_simple_task', 'video')
 
         count_task = sum(lesson['count_quiz'] + lesson['count_simple_task'] for lesson in lessons)
-        count_video = sum(lesson['count_video'] for lesson in lessons)
+        count_video = sum(1 for lesson in lessons if lesson['video'])
 
         student_on_course = self.request.user in course.students.all()
 
@@ -309,7 +304,6 @@ class LessonCreateView(CreateView):
 
     def post(self, request, *args, **kwargs):
         course_part = get_object_or_404(CoursePart, id=self.kwargs.get('course_part_id'))
-        self.success_url = reverse('education_app:update_course_part', kwargs={'course_part_id': course_part.pk})
         if not course_part.course.is_owner(request.user.teacher):
             raise Http404
         return super().post(request, *args, **kwargs)
@@ -317,7 +311,8 @@ class LessonCreateView(CreateView):
     def form_valid(self, form):
         course_part = get_object_or_404(CoursePart, id=self.kwargs.get('course_part_id'))
         form.instance.course_part = course_part
-        form.save()
+        lesson = form.save()
+        self.success_url = reverse('education_app:update_lesson', kwargs={'lesson_id': lesson.pk})
         return super().form_valid(form)
 
 
@@ -364,7 +359,9 @@ class LessonDetailView(DetailView):
 
         lesson = self.get_object()
         if not lesson.student_has_access(self.request.user):
-            raise Http404()
+            return render(request, 'users_app/alerts/alert.html', context={
+                'title': 'Урок не доступен', 'msg': 'Запишитесь на курс, или решите все предыдущие уроки'
+            })
 
         simple_tasks = lesson.simpletask_set.all().prefetch_related('students_that_solved')
         quizs = lesson.quizquestion_set.all().prefetch_related('answer_set').prefetch_related('students_that_solved')
@@ -507,9 +504,6 @@ class SimpleTaskDeleteView(DeleteView):
         return super().post(request, args, kwargs)
 
 
-
-
-
 class QuizCreateView(CreateView):
     form_class = QuizForm
     template_name = 'education_app/quiz/create.html'
@@ -522,7 +516,6 @@ class QuizCreateView(CreateView):
 
     def post(self, request, *args, **kwargs):
         lesson = get_object_or_404(Lesson, id=self.kwargs.get('lesson_id'))
-        self.success_url = self.success_url = reverse('education_app:update_lesson', kwargs={'lesson_id': lesson.pk})
 
         if lesson.course_part.course.is_owner(request.user.teacher):
             return super().post(request, args, kwargs)
@@ -531,7 +524,8 @@ class QuizCreateView(CreateView):
     def form_valid(self, form):
         lesson = get_object_or_404(Lesson, id=self.kwargs.get('lesson_id'))
         form.instance.lesson = lesson
-        form.save()
+        quiz = form.save()
+        self.success_url = self.success_url = reverse('education_app:update_quiz', kwargs={'quiz_id': quiz.pk})
         return super().form_valid(form)
 
 
@@ -663,7 +657,8 @@ class TaskWithFileUpdateView(UpdateView):
     def post(self, request, *args, **kwargs):
         task_w_file = self.get_object()
 
-        self.success_url = self.success_url = reverse('education_app:update_lesson', kwargs={'lesson_id': task_w_file.lesson.pk})
+        self.success_url = self.success_url = reverse('education_app:update_lesson',
+                                                      kwargs={'lesson_id': task_w_file.lesson.pk})
 
         if task_w_file.lesson.course_part.course.is_owner(request.user.teacher):
             return super().post(request, args, kwargs)
@@ -678,15 +673,22 @@ class TaskWithFileUpdateView(UpdateView):
 def answer_answer_to_task_with_file(request):
     if request.method == "POST":
         form = AnswerToTaskWFileForm(data=request.POST, files=request.FILES, student=request.user)
-        if form.is_valid():
+        is_form_valid = form.is_valid()
+        redirect_to = redirect(reverse('education_app:lesson', args=(form.task_obj.lesson.pk,)))
+
+        if is_form_valid:
             form.save()
-            return HttpResponse('Файл сохранен !')
-        return HttpResponse(form.errors['file'])
+            messages.info(request, 'Файл сохранен')
+            return redirect_to
+        messages.info(request, form.errors['file'])
+        return redirect_to
 
 
 def answer_to_quiz(request):
     if request.method == 'POST':
         quiz = get_object_or_404(QuizQuestion, id=request.POST.get('quiz', None))
+        redirect_to = redirect(reverse('education_app:lesson', args=(quiz.lesson.pk,)))
+
         if quiz.lesson.student_has_access(request.user):
             answers_ids = list(map(int, request.POST.getlist('answers')))
             selected_answers = quiz.answer_set.filter(pk__in=answers_ids)
@@ -694,15 +696,16 @@ def answer_to_quiz(request):
 
             if set(selected_answers) == set(right_answers):
                 quiz.students_that_solved.add(request.user)
-                return HttpResponse('Правильно')
+                messages.info(request, 'Верно')
+                return redirect_to
 
-            return HttpResponse('Не верно')
+            messages.info(request, 'Не верно')
+            return redirect_to
 
     raise Http404()
 
 
 def manual_reject_answer(request):
-
     if request.method == "POST":
         manual_test_info = request.POST['manual_test_id']
 
@@ -768,14 +771,22 @@ def answer_to_simple_task(request):
     if request.method == 'POST':
         form = AnswerToSimpleTaskForm(data=request.POST, student=request.user)
         if form.is_valid():
+            redirect_to = redirect(reverse('education_app:lesson', args=(form.object.lesson.pk,)))
             if not form.object.manual_test:
                 if form.check_answer():
-                    return HttpResponse('Правильно!')
-                return HttpResponse('К сожалению вы допустили ошибку')
+
+                    messages.info(request, 'Ответ верный')
+                    return redirect_to
+
+                messages.info(request, 'Ответ не верный')
+                return redirect_to
 
             send_result = form.send_to_manual_test()
             if isinstance(send_result, (bool,)):
-                return HttpResponse('ваш ответ отправлен на ручную проверку')
-            return HttpResponse(send_result)
+                messages.info(request, 'Ваш ответ отправлен на ручную проверку')
+                return redirect_to
+
+            messages.warning(request, send_result)
+            return redirect_to
 
     raise Http404()

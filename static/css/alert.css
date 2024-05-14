@@ -1,5 +1,6 @@
-body{
-    background-color: black;
+body {
+  font-family: "Jura", sans-serif;
+  background-color: #04001A;
 }
 
 .msg {
@@ -9,8 +10,9 @@ body{
     text-align: center;
     margin: 0 auto;
     width: 80%;
-    background-color: #200772;
+    background-color: #712cf9;
     color: white;
-    height: 50vh;
+    font-size: 24px;
+    height: 120px;
     border-radius: 4vh;
 }

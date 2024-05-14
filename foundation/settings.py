@@ -44,7 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     # third party libraries
     'django_ckeditor_5',
-    'debug_toolbar',
+    # 'debug_toolbar',
     # third party libraries
     
     # project_apps
@@ -61,7 +61,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'debug_toolbar.middleware.DebugToolbarMiddleware'
+    # 'debug_toolbar.middleware.DebugToolbarMiddleware'
 ]
 
 ROOT_URLCONF = 'foundation.urls'
@@ -119,7 +119,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'ru'
 
 TIME_ZONE = 'UTC'
 
@@ -141,6 +141,9 @@ STATICFILES_DIRS = [
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# DJANGO-MESSAGES
+MESSAGE_STORAGE = 'django.contrib.messages.storage.cookie.CookieStorage'
 
 # Auth
 
@@ -172,27 +175,27 @@ EMAIL_USE_TLS = True
 
 customColorPalette = [
     {
-        'color': 'hsl(4, 90%, 58%)',
+        'color': 'red)',
         'label': 'Red'
     },
     {
-        'color': 'hsl(340, 82%, 52%)',
+        'color': 'pink',
         'label': 'Pink'
     },
     {
-        'color': 'hsl(291, 64%, 42%)',
+        'color': 'purple',
         'label': 'Purple'
     },
     {
-        'color': 'hsl(262, 52%, 47%)',
+        'color': 'deep purple',
         'label': 'Deep Purple'
     },
     {
-        'color': 'hsl(231, 48%, 48%)',
+        'color': 'indigo',
         'label': 'Indigo'
     },
     {
-        'color': 'hsl(207, 90%, 54%)',
+        'color': 'blue',
         'label': 'Blue'
     },
 ]

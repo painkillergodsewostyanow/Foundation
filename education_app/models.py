@@ -8,11 +8,11 @@ from django.urls import reverse
 
 class Course(models.Model):
     author = models.ForeignKey(Teacher, on_delete=models.PROTECT, verbose_name='Автор')
-    title = models.CharField(max_length=255, verbose_name='Название')
+    title = models.CharField(max_length=50, verbose_name='Название')
     image = models.ImageField(blank=True, null=True, upload_to='media/education_app/courses_img',
                               verbose_name='Изображение')
     is_private = models.BooleanField(default=False)
-    description = CKEditor5Field('description', config_name='extends')
+    description = CKEditor5Field('description', config_name='extends', max_length=5000)
 
     students = models.ManyToManyField(
         blank=True, null=True,
@@ -52,11 +52,10 @@ class Course(models.Model):
         self.students.add(student)
 
     def student_has_access(self, student):
-        if student.is_teacher():
-            return self.author == student.teacher
         if self.is_published:
             return student in self.students.all()
-        return False
+        if student.is_teacher():
+            return self.is_owner(student.teacher)
 
 
 class StudentThatSolvedCourseM2M(models.Model):
@@ -106,11 +105,6 @@ class CoursePart(models.Model):
         return 1
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
-        """
-        Если создается раздел с порядком который уже занят,
-        или порядок раздела меняется на уже занятый, то порядки перестраиваются
-        """
-
         course_part_w_same_order = self.course.coursepart_set.filter(order=self.order).first()
 
         if course_part_w_same_order and course_part_w_same_order != self:
@@ -119,23 +113,16 @@ class CoursePart(models.Model):
         return super().save(force_insert=False, force_update=False, using=None, update_fields=None)
 
     def delete(self, using=None, keep_parents=False):
-        """
-        При удалении раздела нужно перестроить порядки
-        """
-
         self.course.coursepart_set.filter(order__gt=self.order).update(
             order=F('order') - 1
         )
         return super().delete(using, keep_parents)
 
     def student_has_access(self, student):
-        # Если у пользователя есть доступ к курсу
         if self.course.student_has_access(student):
-            # Если это первый раздел курса, то он доступен
             if self.course.coursepart_set.first() == self:
                 return True
 
-            # Если решены все разделы до этого, то раздел доступен
             prev_course_parts = self.course.coursepart_set.filter(order__lt=self.order).prefetch_related('students_that_solved')
             for prev_course_part in prev_course_parts:
                 if student not in prev_course_part.students_that_solved.all():
@@ -177,22 +164,8 @@ class Lesson(models.Model):
     def __str__(self):
         return self.title
 
-    def get_next_lesson(self):
-        return self.course_part.lesson_set.filter(order__gt=self.order).first()
-
     def get_absolute_url(self):
         return reverse('education_app:lesson', kwargs={'pk': self.pk})
-
-    def get_percent_ready(self, student):
-        """Возвращает процент на сколько выполнен урок"""
-        stat = self.simpletask_set.aggregate(
-            total=Count('pk', distinct=True),
-            solved=Count('pk', filter=Q(students_that_solved=student))
-        )
-        if stat['solved'] == 0:
-            return 0
-
-        return (stat['solved']/stat['total']) * 100
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         """
@@ -217,6 +190,11 @@ class Lesson(models.Model):
         return super().delete(using, keep_parents)
 
     def student_has_access(self, student):
+        related_teacher = student.related_teacher
+        if related_teacher:
+            if self.course_part.course.is_owner(related_teacher):
+                return True
+
         # Если есть доступ к разделу
         if self.course_part.student_has_access(student):
             # Если урок первый, он доступен
@@ -410,7 +388,7 @@ class TaskWithFile(models.Model):
 
 
 def define_upload_path(instance, filename):
-    return '/'.join(['file_answers', instance.task.lesson.course_part.course.title, filename])
+    return '/'.join(['media/file_answers', instance.task.lesson.course_part.course.title, filename])
 
 
 class AnswerToTaskWithFile(models.Model):

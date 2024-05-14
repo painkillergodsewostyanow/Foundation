@@ -122,13 +122,13 @@ class QuizForm(forms.ModelForm):
         'style': "font-size:32px;", 'class': "form-control", 'placeholder': "Подсказка"
     }))
 
-    question = forms.CharField(widget=forms.TextInput(attrs={
+    description = forms.CharField(widget=forms.TextInput(attrs={
         'style': "font-size:32px;", 'class': "form-control", 'placeholder': "Описание"
     }))
 
     class Meta:
         model = QuizQuestion
-        fields = ('place', 'title', 'question', 'hint')
+        fields = ('place', 'title', 'description', 'hint')
 
 
 class TaskWithFileForm(forms.ModelForm):

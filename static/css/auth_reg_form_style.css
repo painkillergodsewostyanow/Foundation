@@ -29,10 +29,30 @@ body{
 
 .block{
     height: 100%;
-    background-color: #200772;
+    background-color:#712cf9;
     box-shadow: 0 5px 45px #200772;
     display: flex;
     align-items: center;
+}
+
+.col{
+    margin-bottom: 20px;
+}
+
+.errors{
+    left: 0;
+    top: 0;
+    position: absolute;
+    padding-top: 10px;
+    padding-left: 4px;
+    width: 25%;
+}
+.bg{
+background-color: #712cf9;
+color:white;
+}
+.errors li{
+    list-style-type: none;
 }
 
 .block__item {

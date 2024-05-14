@@ -1,7 +1,9 @@
 {% extends 'base.html' %}
 {% load custom_tags %}
+{% load static %}
 
 {% block content %}
+<link rel="stylesheet" href="{% static 'django_ckeditor_5/dist/styles.css' %}">
 <section class="content">
     <div class="container">
         <div class="row">
@@ -78,7 +80,7 @@
     <img src="{{object.image.url}}">
 </div>
 <div>{{object.title}}</div>
-<div>{{object.description|escape}}</div>
+<div>{{object.description|safe}}</div>
 {% if not request.user.is_teacher %}
     {% if not request.user.student in object.students.all %}
         <div>
