@@ -81,8 +81,8 @@ urlpatterns = [
     # ANSWER TO QUIZ
 
     # MANUAL TEST
-    path('reject', manual_reject_answer, name='reject'),
-    path('confirm', manual_confirm_answer, name='confirm'),
+    path('reject', RejectAnswerView.as_view(), name='reject'),
+    path('confirm', ConfirmAnswerView.as_view(), name='confirm'),
     # MANUAL TEST
 
     path('catalog', CatalogListView.as_view(), name='catalog'),

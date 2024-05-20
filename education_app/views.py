@@ -777,68 +777,79 @@ def answer_to_quiz(request):
     raise Http404()
 
 
-def manual_reject_answer(request):
-    # TODO(REBORN)
-    if request.method == "POST":
+class RejectAnswerView(View):
+    def post(self, request, *args, **kwargs):
+        manual_test_info = request.POST['manual_test_id']
+        if manual_test_info.startswith('task_w_file'):
+            return self._reject_task_w_file(manual_test_info)
+
+        if manual_test_info.startswith('simple_task'):
+            return self._reject_simple_task(manual_test_info)
+
+    def _reject_task_w_file(self, info):
+        pk = int(info[12:])
+        obj = (
+            AnswerToTaskWithFile.objects
+            .select_related('task__lesson__course_part__course__author')
+            .filter(pk=pk).first()
+        )
+        return self._reject(obj)
+
+    def _reject_simple_task(self, info):
+        pk = int(info[12:])
+        obj = (
+            SimpleTaskToManualTest.objects
+            .select_related('simple_task__lesson__course_part__course__author')
+            .filter(pk=pk).first()
+        )
+        return self._reject(obj)
+
+    def _reject(self, obj):
+        if obj.is_owner(self.request.user.teacher):
+            comment = self.request.POST.get('comment', '')
+            obj.comment = comment
+            obj.save()
+            obj.reject()
+            return redirect(self.request.META['HTTP_REFERER'])
+        raise Http404()
+
+
+class ConfirmAnswerView(View):
+    def post(self, request, *args, **kwargs):
         manual_test_info = request.POST['manual_test_id']
 
         if manual_test_info.startswith('task_w_file'):
-            pk = int(manual_test_info[12:])
-            manual_test = (
-                AnswerToTaskWithFile.objects
-                .select_related('task__lesson__course_part__course__author')
-                .filter(pk=pk).first()
-            )
+            return self._confirm_task_w_file(manual_test_info)
 
-        if manual_test_info.startswith('simple_task_'):
-            pk = int(manual_test_info[12:])
-            manual_test = (
-                SimpleTaskToManualTest.objects
-                .select_related('simple_task__lesson__course_part__course__author')
-                .filter(pk=pk).first()
-            )
+        if manual_test_info.startswith('simple_task'):
+            return self._confirm_simple_task(manual_test_info)
 
-        comment = request.POST.get('comment', '')
-        manual_test.comment = comment
-        manual_test.save()
+    def _confirm_task_w_file(self, info):
+        pk = int(info[12:])
+        obj = (
+            AnswerToTaskWithFile.objects
+            .select_related('task__lesson__course_part__course__author')
+            .filter(pk=pk).first()
+        )
+        return self._confirm(obj)
 
-        if manual_test.is_owner(request.user.teacher):
-            manual_test.reject()
-            return redirect(request.META['HTTP_REFERER'])
+    def _confirm_simple_task(self, info):
+        pk = int(info[12:])
+        obj = (
+            SimpleTaskToManualTest.objects
+            .select_related('simple_task__lesson__course_part__course__author')
+            .filter(pk=pk).first()
+        )
+        return self._confirm(obj)
+
+    def _confirm(self, obj):
+        if obj.is_owner(self.request.user.teacher):
+            comment = self.request.POST.get('comment', '')
+            obj.comment = comment
+            obj.save()
+            obj.confirm()
+            return redirect(self.request.META['HTTP_REFERER'])
         raise Http404()
-    raise Http404()
-
-
-def manual_confirm_answer(request):
-    # TODO(REBORN)
-    if request.method == "POST":
-        manual_test_info = request.POST['manual_test_id']
-
-        if manual_test_info.startswith('task_w_file'):
-            pk = int(manual_test_info[12:])
-            manual_test = (
-                AnswerToTaskWithFile.objects
-                .select_related('task__lesson__course_part__course__author')
-                .filter(pk=pk).first()
-            )
-
-        if manual_test_info.startswith('simple_task_'):
-            pk = int(manual_test_info[12:])
-            manual_test = (
-                SimpleTaskToManualTest.objects
-                .select_related('simple_task__lesson__course_part__course__author')
-                .filter(pk=pk).first()
-            )
-
-        comment = request.POST.get('comment', '')
-        manual_test.comment = comment
-        manual_test.save()
-
-        if manual_test.is_owner(request.user.teacher):
-            manual_test.confirm()
-            return redirect(request.META['HTTP_REFERER'])
-        raise Http404()
-    raise Http404()
 
 
 def answer_to_simple_task(request):
