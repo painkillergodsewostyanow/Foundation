@@ -45,9 +45,3 @@
     </section>
 {% endblock %}
 <body>
-<form action="" enctype="multipart/form-data" method="POST">
-    {% csrf_token %}
-    {{form.errors}}
-  {{form}}
-    <button type="submit">Создать</button>
-</form>

@@ -225,7 +225,6 @@ class StudentThatSolvedLessonM2M(models.Model):
 
 class SimpleTask(models.Model):
     class Meta:
-        ordering = ["order"]
         verbose_name = 'Задача'
         verbose_name_plural = 'Задачи'
 
@@ -247,29 +246,8 @@ class SimpleTask(models.Model):
         blank=True, null=True,
         to=User, through='StudentThatSolvedSimpleTaskM2M'
     )
-    order = models.PositiveSmallIntegerField()
     re_answer = models.BooleanField(default=False)
     manual_test = models.BooleanField(default=False)
-
-    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
-        """
-        Если создается простая задача с порядком который уже занят,
-        или порядок раздела меняется на уже занятый, то порядки перестраиваются
-        """
-
-        simple_task_w_same_order = self.lesson.simpletask_set.filter(order=self.order).first()
-
-        if simple_task_w_same_order and simple_task_w_same_order != self:
-            self.lesson.simpletask_set.filter(order__gte=self.order).update(order=F('order') + 1)
-
-        return super().save(force_insert=False, force_update=False, using=None, update_fields=None)
-
-    def delete(self, using=None, keep_parents=False):
-        # При удалении урока нужно поправить порядок
-        self.lesson.simpletask_set.filter(order__gt=self.order).update(
-            order=F('order') - 1
-        )
-        return super().delete(using, keep_parents)
 
 
 class StudentThatSolvedSimpleTaskM2M(models.Model):

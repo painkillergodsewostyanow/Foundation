@@ -57,7 +57,7 @@
                             <span style="float:right;">
                                 <a
                                     href="{% url 'education_app:update_simple_task' simple_task.pk %}">Изменить
-                                </a>{{simple_task.order}}
+                                </a>
                             </span>
                             <span style="float:right;">
                                 <a
@@ -66,7 +66,7 @@
                             </span>
                         </li>
                     {% endfor %}
-                    <li class="list-group-item"><a href="{% url 'education_app:create_simple_task' object.pk %}">Добавить задачу</a></li>
+                    <li class="list-group-item text-center"><a class="btn" href="{% url 'education_app:create_simple_task' object.pk %}">Добавить задачу</a></li>
                 </ul>
             </div>
             <div class="col-md-12" style="border-radius: 12px; margin-top:60px;">
@@ -86,7 +86,7 @@
                             </span>
                         </li>
                     {% endfor %}
-                    <li class="list-group-item"><a href="{% url 'education_app:create_quiz' object.pk %}">Добавить квиз</a></li>
+                    <li class="list-group-item text-center"><a class="btn" href="{% url 'education_app:create_quiz' object.pk %}">Добавить квиз</a></li>
                 </ul>
             </div>
             <div class="col-md-12" style="border-radius: 12px; margin-top:60px;">
@@ -101,7 +101,7 @@
                             </span>
                         </li>
                     {% endfor %}
-                    <li class="list-group-item"><a href="{% url 'education_app:create_task_with_file' object.pk %}">Добавить задачу с файловым ответом</a></li>
+                    <li class="list-group-item text-center"><a class="btn" href="{% url 'education_app:create_task_with_file' object.pk %}">Добавить задачу с файловым ответом</a></li>
                 </ul>
             </div>
         </div>
@@ -114,21 +114,3 @@
     {% endfor %}
 </div>
 {% endblock %}
-
-{% block js %}
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-u1OknCvxWvY5kfmNBILK2hRnQC3Pr17a+RTT6rIHI7NnikvbZlHgTPOOmMi466C8"
-        crossorigin="anonymous"></script>
-<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
-
-<script>
-    $(function() {
-      $("#sortable").sortable();
-      $("#sortable").disableSelection();
-    });
-</script>
-{% endblock js %}
