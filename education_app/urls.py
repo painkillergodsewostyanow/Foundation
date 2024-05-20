@@ -59,7 +59,7 @@ urlpatterns = [
 
     path('lesson/<int:lesson_id>/add-task-with-file', TaskWithFileCreateView.as_view(), name='create_task_with_file'),
     path('task-with-file/<int:pk>/update', TaskWithFileUpdateView.as_view(), name='update_task_with_file'),
-    path('task_with_file/answer', answer_answer_to_task_with_file, name='answer_to_task_w_file'),
+    path('task_with_file/answer', answer_to_task_with_file, name='answer_to_task_w_file'),
 
     # TASK WITH FILES
 

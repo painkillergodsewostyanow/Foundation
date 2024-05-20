@@ -42,7 +42,8 @@ class UpdateUser(UpdateView):
         context = super().get_context_data(**kwargs)
         context.update(
             {
-                'pwd_change_form': self.pwd_change_form(user=self.get_object())
+                'pwd_change_form': self.pwd_change_form(user=self.get_object()),
+                'title': "Настройки профиля"
             }
         )
         return context
@@ -111,7 +112,7 @@ class ProfileView(DetailView):
             ),
         )
 
-        context.update({'activity_list': activity_list, 'courses': courses})
+        context.update({'activity_list': activity_list, 'courses': courses, 'title': student.username})
         return context
 
 

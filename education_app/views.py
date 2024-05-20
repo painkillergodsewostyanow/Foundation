@@ -38,7 +38,7 @@ class TeacherDashboard(View):
         return render(
             request,
             'education_app/teacher_dashboard.html',
-            context={'manual_test_objs': manual_test_objs}
+            context={'manual_test_objs': manual_test_objs, 'title': "Личный кабинет преподавателя"}
         )
 
 
@@ -112,7 +112,7 @@ class StudentDashboard(View):
             request, 'education_app/student_dashboard.html',
             {
                 'courses': courses, 'activity_list': activity_list,
-                'manual_test_result': manual_test_result
+                'manual_test_result': manual_test_result, 'title': "Личный кабинет ученика"
             }
         )
 
@@ -131,6 +131,11 @@ class CatalogListView(ListView):
     model = Course
     paginate_by = 6
 
+    def get_context_data(self, *, object_list=None, **kwargs):
+        context = super().get_context_data()
+        context.update({'title': 'Каталог'})
+        return context
+
     def get_queryset(self):
         return self.model.objects.filter(is_published=True)
 
@@ -138,6 +143,11 @@ class CatalogListView(ListView):
 class CourseCreateView(CreateView):
     form_class = CourseForm
     template_name = 'education_app/course/create.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({'title': 'Создание курса'})
+        return context
 
     def form_valid(self, form):
         author = self.request.user.teacher
@@ -152,7 +162,11 @@ class CourseUpdateView(UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super(CourseUpdateView, self).get_context_data(**kwargs)
-        context['add_course_part_form'] = CoursePartForm()
+        context.update({
+            'add_course_part_form': CoursePartForm(),
+            'title': f'{self.get_object().title} | Изменение'
+        })
+
         return context
 
     def get(self, request, *args, **kwargs):
@@ -210,6 +224,7 @@ class CourseDetailView(DetailView):
             'count_lesson': lessons.count(),
             'count_course_part': course.course_part_count,
             'student_on_course': student_on_course,
+            'title': f"{course.title} | Представление"
         }
 
         if not course.is_owner(self.request.user.related_teacher):
@@ -243,6 +258,11 @@ class CoursePartCreateView(CreateView):
 class CoursePartUpdateView(UpdateView):
     form_class = CoursePartForm
     template_name = 'education_app/course_part/update.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({'title': f'{self.get_object().title} | Изменение'})
+        return context
 
     def get(self, request, *args, **kwargs):
         course_part = self.get_object()
@@ -290,35 +310,45 @@ class CoursePartDeleteView(DeleteView):
 class LessonCreateView(CreateView):
     form_class = LessonForm
     template_name = 'education_app/lesson/create.html'
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.course_part = None
+    parent_obj = None
 
     def get(self, request, *args, **kwargs):
-        course_part = get_object_or_404(CoursePart, id=self.kwargs.get('course_part_id'))
+        course_part = self.get_parent_obj()
         if course_part.course.is_owner(request.user.teacher):
             form = self.form_class(initial={'order': course_part.get_auto_order_for_lesson()})
-            return render(request, self.template_name, context={'form': form})
+            return render(
+                request, self.template_name, context={'form': form, 'title': f'{course_part.title} | Добавление урока'}
+            )
         raise Http404
 
     def post(self, request, *args, **kwargs):
-        course_part = get_object_or_404(CoursePart, id=self.kwargs.get('course_part_id'))
+        course_part = self.get_parent_obj()
         if not course_part.course.is_owner(request.user.teacher):
             raise Http404
         return super().post(request, *args, **kwargs)
 
     def form_valid(self, form):
-        course_part = get_object_or_404(CoursePart, id=self.kwargs.get('course_part_id'))
+        course_part = self.get_parent_obj()
         form.instance.course_part = course_part
         lesson = form.save()
         self.success_url = reverse('education_app:update_lesson', kwargs={'lesson_id': lesson.pk})
         return super().form_valid(form)
 
+    def get_parent_obj(self, queryset=None):
+        if not self.parent_obj:
+            course_part_id = self.kwargs.get('course_part_id')
+            self.parent_obj = get_object_or_404(CoursePart, id=course_part_id)
+        return self.parent_obj
+
 
 class LessonUpdateView(UpdateView):
     form_class = LessonForm
     template_name = 'education_app/lesson/update.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({'title': f'{self.get_object()} | Изменение'})
+        return context
 
     def get(self, request, *args, **kwargs):
         lesson = self.get_object()
@@ -397,6 +427,7 @@ class LessonDetailView(DetailView):
             request,
             self.template_name,
             context={
+                'title': lesson.title,
                 'answer_to_task_w_file_form': answer_to_task_w_file_form,
                 'theory_task_w_file': theory_task_w_file,
                 'practice_task_w_file': practice_task_w_file,
@@ -444,15 +475,22 @@ class LessonDeleteView(DeleteView):
 class SimpleTaskCreateView(CreateView):
     form_class = SimpleTaskForm
     template_name = 'education_app/simple_task/create.html'
+    parent_obj = None
+
+    def get_context_data(self, **kwargs):
+        lesson = self.get_parent_obj()
+        context = super().get_context_data()
+        context.update({'title': f'{lesson.title} | Добавление задачи'})
+        return context
 
     def get(self, request, *args, **kwargs):
-        lesson = get_object_or_404(Lesson, id=self.kwargs.get('lesson_id'))
+        lesson = self.get_parent_obj()
         if lesson.course_part.course.is_owner(request.user.teacher):
             return super().get(request, args, kwargs)
         raise Http404()
 
     def post(self, request, *args, **kwargs):
-        lesson = get_object_or_404(Lesson, id=self.kwargs.get('lesson_id'))
+        lesson = self.get_parent_obj()
         self.success_url = self.success_url = reverse('education_app:update_lesson', kwargs={'lesson_id': lesson.pk})
 
         if lesson.course_part.course.is_owner(request.user.teacher):
@@ -460,15 +498,26 @@ class SimpleTaskCreateView(CreateView):
         raise Http404()
 
     def form_valid(self, form):
-        lesson = get_object_or_404(Lesson, id=self.kwargs.get('lesson_id'))
+        lesson = self.get_parent_obj()
         form.instance.lesson = lesson
         form.save()
         return super().form_valid(form)
+
+    def get_parent_obj(self, queryset=None):
+        if not self.parent_obj:
+            lesson_id = self.kwargs.get('lesson_id')
+            self.parent_obj = get_object_or_404(Lesson, id=lesson_id)
+        return self.parent_obj
 
 
 class SimpleTaskUpdateView(UpdateView):
     form_class = SimpleTaskForm
     template_name = 'education_app/simple_task/create.html'
+
+    def get_context_data(self, **kwargs):
+        contex = super().get_context_data(**kwargs)
+        contex.update({'title': f'{self.get_object().title} | Изменение'})
+        return contex
 
     def get(self, request, *args, **kwargs):
         simple_task = self.get_object()
@@ -507,26 +556,38 @@ class SimpleTaskDeleteView(DeleteView):
 class QuizCreateView(CreateView):
     form_class = QuizForm
     template_name = 'education_app/quiz/create.html'
+    parent_obj = None
+
+    def get_context_data(self, **kwargs):
+        contex = super().get_context_data(**kwargs)
+        contex.update({'title': f'{self.get_parent_obj().title} | Добавление квиза'})
+        return contex
 
     def get(self, request, *args, **kwargs):
-        lesson = get_object_or_404(Lesson, id=self.kwargs.get('lesson_id'))
+        lesson = self.get_parent_obj()
         if lesson.course_part.course.is_owner(request.user.teacher):
             return super().get(request, args, kwargs)
         raise Http404()
 
     def post(self, request, *args, **kwargs):
-        lesson = get_object_or_404(Lesson, id=self.kwargs.get('lesson_id'))
+        lesson = self.get_parent_obj()
 
         if lesson.course_part.course.is_owner(request.user.teacher):
             return super().post(request, args, kwargs)
         raise Http404()
 
     def form_valid(self, form):
-        lesson = get_object_or_404(Lesson, id=self.kwargs.get('lesson_id'))
+        lesson = self.get_parent_obj()
         form.instance.lesson = lesson
         quiz = form.save()
         self.success_url = self.success_url = reverse('education_app:update_quiz', kwargs={'quiz_id': quiz.pk})
         return super().form_valid(form)
+
+    def get_parent_obj(self, queryset=None):
+        if not self.parent_obj:
+            lesson_id = self.kwargs.get('lesson_id')
+            self.parent_obj = get_object_or_404(Lesson, id=lesson_id)
+        return self.parent_obj
 
 
 class QuizUpdateView(UpdateView):
@@ -536,7 +597,8 @@ class QuizUpdateView(UpdateView):
     def get_context_data(self, **kwargs):
         context = super(QuizUpdateView, self).get_context_data(**kwargs)
         context.update({
-            'add_answer_form': AnswerForm()
+            'add_answer_form': AnswerForm(),
+            'title': f"{self.get_object().title} | Изменение"
         })
         return context
 
@@ -565,16 +627,8 @@ class AnswerToQuizCreateView(CreateView):
     form_class = AnswerForm
     template_name = 'education_app/answer_to_quiz/create.html'
 
-    def get(self, request, *args, **kwargs):
-        quiz = get_object_or_404(QuizQuestion, id=self.kwargs.get('quiz_pk'))
-        self.success_url = self.success_url = reverse('education_app:update_quiz', kwargs={'quiz_id': quiz.pk})
-
-        if quiz.lesson.course_part.course.is_owner(request.user.teacher):
-            return super().post(request, args, kwargs)
-        raise Http404()
-
     def post(self, request, *args, **kwargs):
-        quiz = get_object_or_404(QuizQuestion, id=self.kwargs.get('quiz_pk'))
+        quiz = self.get_parent_obj()
         self.success_url = self.success_url = reverse('education_app:update_quiz', kwargs={'quiz_id': quiz.pk})
 
         if quiz.lesson.course_part.course.is_owner(request.user.teacher):
@@ -582,7 +636,7 @@ class AnswerToQuizCreateView(CreateView):
         raise Http404()
 
     def form_valid(self, form):
-        quiz = get_object_or_404(QuizQuestion, id=self.kwargs.get('quiz_pk'))
+        quiz = self.get_parent_obj()
         form.instance.question = quiz
         form.save()
         return super().form_valid(form)
@@ -591,6 +645,12 @@ class AnswerToQuizCreateView(CreateView):
 class AnswerToQuizUpdateView(UpdateView):
     form_class = AnswerForm
     template_name = 'education_app/answer_to_quiz/update.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        answer = self.get_object()
+        context.update({'title': f"{answer.question.title} | {answer.pk} | Изменение"})
+        return context
 
     def get(self, request, *args, **kwargs):
         quiz = self.get_object().question
@@ -616,15 +676,21 @@ class AnswerToQuizUpdateView(UpdateView):
 class TaskWithFileCreateView(CreateView):
     form_class = TaskWithFileForm
     template_name = 'education_app/task_with_file/create.html'
+    parent_obj = None
+
+    def get_context_data(self, **kwargs):
+        contex = super().get_context_data(**kwargs)
+        contex.update({'title': f'{self.get_parent_obj()} | Добавление задачи с файлом'})
+        return contex
 
     def get(self, request, *args, **kwargs):
-        lesson = self.get_lesson()
+        lesson = self.get_parent_obj()
         if lesson.course_part.course.is_owner(request.user.teacher):
             return super().get(request, args, kwargs)
         raise Http404()
 
     def post(self, request, *args, **kwargs):
-        lesson = self.get_lesson()
+        lesson = self.get_parent_obj()
         self.success_url = self.success_url = reverse('education_app:update_lesson', kwargs={'lesson_id': lesson.pk})
 
         if lesson.course_part.course.is_owner(request.user.teacher):
@@ -632,20 +698,26 @@ class TaskWithFileCreateView(CreateView):
         raise Http404()
 
     def form_valid(self, form):
-        lesson = self.get_lesson()
+        lesson = self.get_parent_obj()
         form.instance.lesson = lesson
         form.save()
         return super().form_valid(form)
 
-    def get_lesson(self):
-        if not hasattr(self, 'lesson'):
-            self.lesson = get_object_or_404(Lesson, id=self.kwargs.get('lesson_id'))
-        return self.lesson
+    def get_parent_obj(self, queryset=None):
+        if not self.parent_obj:
+            lesson_id = self.kwargs.get('lesson_id')
+            self.parent_obj = get_object_or_404(Lesson, id=lesson_id)
+        return self.parent_obj
 
 
 class TaskWithFileUpdateView(UpdateView):
     form_class = TaskWithFileForm
     template_name = 'education_app/task_with_file/create.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({'title': f"{self.get_object().title} | Изменение"})
+        return context
 
     def get(self, request, *args, **kwargs):
         task_w_file = self.get_object()
@@ -670,7 +742,7 @@ class TaskWithFileUpdateView(UpdateView):
         return self.object
 
 
-def answer_answer_to_task_with_file(request):
+def answer_to_task_with_file(request):
     if request.method == "POST":
         form = AnswerToTaskWFileForm(data=request.POST, files=request.FILES, student=request.user)
         is_form_valid = form.is_valid()
@@ -706,6 +778,7 @@ def answer_to_quiz(request):
 
 
 def manual_reject_answer(request):
+    # TODO(REBORN)
     if request.method == "POST":
         manual_test_info = request.POST['manual_test_id']
 
@@ -737,6 +810,7 @@ def manual_reject_answer(request):
 
 
 def manual_confirm_answer(request):
+    # TODO(REBORN)
     if request.method == "POST":
         manual_test_info = request.POST['manual_test_id']
 
