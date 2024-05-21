@@ -38,7 +38,7 @@ class TeacherDashboard(View):
         return render(
             request,
             'education_app/teacher_dashboard.html',
-            context={'manual_test_objs': manual_test_objs, 'title': "Личный кабинет преподавателя"}
+            context={'manual_test_objs': manual_test_objs, 'title': "ЛК преподавателя"}
         )
 
 
@@ -112,7 +112,7 @@ class StudentDashboard(View):
             request, 'education_app/student_dashboard.html',
             {
                 'courses': courses, 'activity_list': activity_list,
-                'manual_test_result': manual_test_result, 'title': "Личный кабинет ученика"
+                'manual_test_result': manual_test_result, 'title': "ЛК ученика"
             }
         )
 
@@ -137,6 +137,9 @@ class CatalogListView(ListView):
         return context
 
     def get_queryset(self):
+        query = self.request.GET.get('query', False)
+        if query:
+            return self.model.objects.filter(is_published=True, title__icontains=query)
         return self.model.objects.filter(is_published=True)
 
 
