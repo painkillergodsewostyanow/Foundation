@@ -281,3 +281,25 @@ class AnswerToTaskWFileForm(forms.ModelForm):
     def save(self, commit=True):
         self.instance.student = self.student
         return super().save()
+
+
+class CodeTaskForm(forms.Form):
+    editor = forms.CharField(widget=forms.Textarea(attrs={'id': 'editor'}), required=False)
+
+    def __init__(self, code_tasks):
+        self.code_tasks = code_tasks
+        super().__init__()
+
+    def js_reqs(self):
+        req_lst = []
+        for code_task in self.code_tasks:
+            req_lst.append(code_task.program_language.js_req)
+        return set(req_lst)
+
+    def langs(self):
+        req_lst = []
+        for code_task in self.code_tasks:
+            req_lst.append(code_task.program_language.lang)
+
+        return set(req_lst)
+

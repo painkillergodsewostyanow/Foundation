@@ -3,14 +3,18 @@
 
 
 {% block head %}
-    <link rel="stylesheet" href="{% static 'css/lesson.css' %}">
-<link rel="stylesheet" href="{% static 'css/video-js.css' %}">
-  <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
 
-<!--    <link rel="stylesheet" href="{% static 'codemirror/lib/codemirror.css' %}" />-->
-<!--    <link rel="stylesheet" href="{% static 'codemirror/theme/ayu-dark.css' %}" />-->
-<!--    <script src="{% static 'codemirror/lib/codemirror.js' %}"></script>-->
-<!--    <script src="{% static 'codemirror/mode/python/python.js' %}"></script>-->
+    <link rel="stylesheet" href="{% static 'css/lesson.css' %}">
+    <link rel="stylesheet" href="{% static 'css/video-js.css' %}">
+    <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="{% static 'codemirror/lib/codemirror.css' %}" />
+    <link rel="stylesheet" href="{% static 'codemirror/theme/ayu-dark.css' %}" />
+    <script src="{% static 'codemirror/lib/codemirror.js' %}"></script>
+    {% for js_req in code_task_form.js_reqs %}
+        <script src="{% static 'codemirror/mode/' %}{{js_req}}"></script>
+    {% endfor %}
+
 {% endblock %}
 
 {% block content %}
@@ -64,9 +68,23 @@
 
                 <div class="d-flex justify-content-center" style="padding-bottom: 40px; margin-bottom: 20px;">
                     <div class="btn-group" role="group" aria-label="Basic outlined example">
-                        <button type="button" class="btn lesson-part-btn active">Теория</button>
-                        <button type="button" class="btn lesson-part-btn">Видео</button>
-                        <button type="button" class="btn lesson-part-btn">Практика</button>
+
+                        {% if object.theory %}
+                            <button type="button" class="btn lesson-part-btn active">Теория</button>
+                        {% endif %}
+
+                        {% if object.video %}
+                            <button type="button" class="btn lesson-part-btn">Видео</button>
+                        {% endif %}
+
+                        {% if object.practice %}
+                            <button type="button" class="btn lesson-part-btn">Практика</button>
+                        {% endif %}
+
+                        {% if code_task_form %}
+                            <button type="button" class="btn lesson-part-btn">Код</button>
+                        {% endif %}
+
                     </div>
                 </div>
                 <div class="row d-flex justify-content-center">
@@ -79,7 +97,7 @@
                     </div>
                 </div>
 
-
+                {% if object.theory %}
                 <hr class="border-2 border-top" style="border-color:gray;"/>
                 <div class="lesson-content active">
                     <div class="lesson-text">
@@ -237,87 +255,10 @@
                             </div>
                         </div>
                     {% endif %}
-<!--                    <div class="code-questions">-->
-<!--                        <h2 style="text-align: center;">Для завершения урока напишите код</h2>-->
-<!--                        <hr class="border-2 border-top" style="border-color:gray;"/>-->
-<!--                        <div class="accordion" id="code_task_list">-->
-<!--                            <div class="accordion-item">-->
-<!--                                <h2 class="accordion-header">-->
-<!--                                    <button class="accordion-button" type="button" data-bs-toggle="collapse"-->
-<!--                                            data-bs-target="#code_task_1" aria-expanded="true" aria-controls="code_task_1">-->
-<!--                                        <h4>Задача с кодом один</h4>-->
-<!--                                    </button>-->
-<!--                                </h2>-->
-<!--                                <div id="code_task_1" class="accordion-collapse collapse" data-bs-parent="#task-list">-->
-<!--                                    <div class="accordion-body">-->
-<!--                                        <div class="question">-->
-<!--                                            <div class="accordion-item hint-item">-->
-<!--                                                <h2 class="accordion-header">-->
-<!--                                                    <button class="accordion-button" type="button"-->
-<!--                                                            data-bs-toggle="collapse" data-bs-target="#code_task_hint_one"-->
-<!--                                                            aria-expanded="true" aria-controls="code_task_hint_one">-->
-<!--                                                    <h4>Подсказка</h4>-->
-<!--                                                    </button>-->
-<!--                                                </h2>-->
-<!--                                                <div id="code_task_hint_one" class="accordion-collapse collapse"-->
-<!--                                                     data-bs-parent="#accordionExample">-->
-<!--                                                    <div class="accordion-body">-->
-<!--                                                        <span>Сколько пальцев у вас на одной руке?</span>-->
-<!--                                                    </div>-->
-<!--                                                </div>-->
-<!--                                            </div>-->
-<!--                                            <div class="question-text mb-3">Сколько будет 3 + 2?</div>-->
-<!--                                        </div>-->
-<!--                                    </div>-->
-<!--                                </div>-->
-<!--                            </div>-->
-<!--                            <div class="accordion-item">-->
-<!--                                <h2 class="accordion-header">-->
-<!--                                    <button class="accordion-button" type="button" data-bs-toggle="collapse"-->
-<!--                                            data-bs-target="#code_task_2" aria-expanded="true" aria-controls="code_task_2">-->
-<!--                                        <h4>Задача с кодом один</h4>-->
-<!--                                    </button>-->
-<!--                                </h2>-->
-<!--                                <div id="code_task_2" class="accordion-collapse collapse" data-bs-parent="#task-list">-->
-<!--                                    <div class="accordion-body">-->
-<!--                                        <div class="question">-->
-<!--                                            <div class="accordion-item hint-item">-->
-<!--                                                <h2 class="accordion-header">-->
-<!--                                                    <button class="accordion-button" type="button"-->
-<!--                                                            data-bs-toggle="collapse" data-bs-target="#code_task_hint_two"-->
-<!--                                                            aria-expanded="true" aria-controls="code_task_hint_two">-->
-<!--                                                    <h4>Подсказка</h4>-->
-<!--                                                    </button>-->
-<!--                                                </h2>-->
-<!--                                                <div id="code_task_hint_two" class="accordion-collapse collapse"-->
-<!--                                                     data-bs-parent="#accordionExample">-->
-<!--                                                    <div class="accordion-body">-->
-<!--                                                        <span>Сколько пальцев у вас на одной руке?</span>-->
-<!--                                                    </div>-->
-<!--                                                </div>-->
-<!--                                            </div>-->
-<!--                                            <div class="question-text mb-3">Сколько будет 3 + 2?</div>-->
-<!--                                        </div>-->
-<!--                                    </div>-->
-<!--                                </div>-->
-<!--                            </div>-->
-<!--                        </div>-->
-<!--                        <div class="code-redactor-block">-->
-<!--                            <div class="code-redactor">-->
-<!--                                <div class="place_to_write_code">-->
-<!--                                    <textarea id="place_to_write_code">print(write your code here)</textarea>-->
-<!--                                </div>-->
-<!--                                <div class="clearfix">-->
-<!--                                    <button class="btn execute_code_btn float-end">RUN</button>-->
-<!--                                </div>-->
-<!--                                <div class="result">-->
-<!--                                    write your code here1111111111111111111111111111111ffswefwwwwwwwwwwwwwwwwwwwwwwwwwww-->
-<!--                                </div>-->
-<!--                            </div>-->
-<!--                        </div>-->
-<!--                    </div>-->
-                </div>
 
+                </div>
+                {% endif %}
+                {% if object.video %}
                 <div class="lesson-content">
                     <div class="lesson-text">
                         <div class="col-12 videoplayer">
@@ -438,12 +379,57 @@
                                         </div>
                                     </div>
                                 {% endfor %}
+
+                                {% for task_w_file in theory_task_w_file %}
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                                    data-bs-target="#task_w_file_{{task_w_file.pk}}" aria-expanded="true" aria-controls="{{task_w_file.pk}}">
+                                                <h4>
+                                                    {{task_w_file.title}}
+                                                    {% if request.user in task_w_file.students_that_solved.all %}
+                                                        <span class="badge text-bg-success" style="margin-left: 20px;">Solved!</span>
+                                                    {% endif %}
+                                                </h4>
+                                            </button>
+                                        </h2>
+                                        <div id="task_w_file_{{task_w_file.pk}}" class="accordion-collapse collapse" data-bs-parent="#theory-task-list">
+                                            <div class="accordion-body">
+                                                <div class="question">
+                                                    <div class="accordion-item hint-item">
+                                                        <h2 class="accordion-header">
+                                                            <button class="accordion-button collapsed" type="button"
+                                                                    data-bs-toggle="collapse" data-bs-target="#task_w_file_{{task_w_file.pk}}_hint"
+                                                                    aria-expanded="true" aria-controls="task_w_file_{{task_w_file.pk}}_hint">
+                                                                <h4>Подсказка</h4>
+                                                            </button>
+                                                        </h2>
+                                                        <div id="task_w_file_{{task_w_file.pk}}_hint" class="accordion-collapse collapse"
+                                                             data-bs-parent="#accordionExample">
+                                                            <div class="accordion-body">
+                                                                <span>{{task_w_file.hint}}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="question-text mb-3">{{task_w_file.description}}</div>
+                                                    <form action="{% url 'education_app:answer_to_task_w_file' %}" method="POST" enctype="multipart/form-data">
+                                                        {% csrf_token %}
+                                                        {{answer_to_task_w_file_form.file}}
+                                                        <input type="hidden" id="task" name="task" value="{{task_w_file.pk}}">
+                                                        <button type="submit" class="btn">Отправить</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
                             </div>
                         </div>
                     {% endif %}
                     </div>
                 </div>
-
+                {% endif %}
+                {% if object.practice %}
                 <div class="lesson-content">
                     <div class="lesson-text">
                         {{object.practice|safe}}
@@ -551,9 +537,129 @@
                                         </div>
                                     </div>
                                 {% endfor %}
+                                {% for task_w_file in theory_task_w_file %}
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                                    data-bs-target="#task_w_file_{{task_w_file.pk}}" aria-expanded="true" aria-controls="{{task_w_file.pk}}">
+                                                <h4>
+                                                    {{task_w_file.title}}
+                                                    {% if request.user in task_w_file.students_that_solved.all %}
+                                                        <span class="badge text-bg-success" style="margin-left: 20px;">Solved!</span>
+                                                    {% endif %}
+                                                </h4>
+                                            </button>
+                                        </h2>
+                                        <div id="task_w_file_{{task_w_file.pk}}" class="accordion-collapse collapse" data-bs-parent="#theory-task-list">
+                                            <div class="accordion-body">
+                                                <div class="question">
+                                                    <div class="accordion-item hint-item">
+                                                        <h2 class="accordion-header">
+                                                            <button class="accordion-button collapsed" type="button"
+                                                                    data-bs-toggle="collapse" data-bs-target="#task_w_file_{{task_w_file.pk}}_hint"
+                                                                    aria-expanded="true" aria-controls="task_w_file_{{task_w_file.pk}}_hint">
+                                                                <h4>Подсказка</h4>
+                                                            </button>
+                                                        </h2>
+                                                        <div id="task_w_file_{{task_w_file.pk}}_hint" class="accordion-collapse collapse"
+                                                             data-bs-parent="#accordionExample">
+                                                            <div class="accordion-body">
+                                                                <span>{{task_w_file.hint}}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="question-text mb-3">{{task_w_file.description}}</div>
+                                                    <form action="{% url 'education_app:answer_to_task_w_file' %}" method="POST" enctype="multipart/form-data">
+                                                        {% csrf_token %}
+                                                        {{answer_to_task_w_file_form.file}}
+                                                        <input type="hidden" id="task" name="task" value="{{task_w_file.pk}}">
+                                                        <button type="submit" class="btn">Отправить</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
                             </div>
                         </div>
                     {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+                <div class="lesson-content">
+                    <div class="lesson-text">
+
+                    </div>
+                    <div class="code-questions">
+                        <h2 style="text-align: center;">Для завершения урока напишите код</h2>
+                        <hr class="border-2 border-top" style="border-color:gray;"/>
+
+                        <div class="accordion" id="code_task_list">
+                            {% for code_task in code_task_form.code_tasks %}
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                                data-bs-target="#code_task_{{code_task.pk}}" aria-expanded="false" aria-controls="code_task_{{code_task.pk}}">
+                                            <h4>{{code_task.title}} | {{code_task.program_language.lang}}
+
+                                                {% if request.user in code_task.students_that_solved.all %}
+                                                    <span id="solved_{{code_task.pk}}" class="badge text-bg-success" style="margin-left: 20px;">Solved!</span>
+                                                {% else %}
+                                                    <span id="solved_{{code_task.pk}}" class="badge text-bg-success" style="margin-left: 20px;"></span>
+                                                {% endif %}
+
+                                            </h4>
+                                        </button>
+                                    </h2>
+                                    <div id="code_task_{{code_task.pk}}" class="accordion-collapse collapse" data-bs-parent="#task-list">
+                                        <div class="accordion-body">
+                                            <div class="question">
+                                                <div class="accordion-item hint-item">
+                                                    <h2 class="accordion-header">
+                                                        <button class="accordion-button collapsed" type="button"
+                                                                data-bs-toggle="collapse" data-bs-target="#code_task_hint_{{code_task.pk}}"
+                                                                aria-expanded="false" aria-controls="code_task_hint_{{code_task.pk}}">
+                                                        <h4>Подсказка</h4>
+                                                        </button>
+                                                    </h2>
+                                                    <div id="code_task_hint_{{code_task.pk}}" class="accordion-collapse collapse"
+                                                         data-bs-parent="#accordionExample">
+                                                        <div class="accordion-body">
+                                                            <span>{{code_task.hint}}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="question-text mb-3">{{code_task.description}}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+
+                        </div>
+                        <div class="code-redactor-block">
+                            <div class="code-redactor">
+                                <select class="form-select mb-4 w-25" id="lang-lst">
+                                    {% for lang in code_task_form.langs %}
+                                        <option value="{{lang}}">{{lang}}</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="place_to_write_code">
+                                    <form action="{% url 'education_app:check_code_task' object.pk %}" id="editor_form" method="POST">
+                                        {% csrf_token %}
+                                        {{code_task_form.editor}}
+
+                                        <div class="clearfix">
+                                            <button type="submit" class="btn execute_code_btn float-end">RUN</button>
+                                        </div>
+                                    </form>
+                                </div>
+
+                                <div class="result" id="result_block">
+
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -562,24 +668,11 @@
 
 {% block js %}
 
-<!--    <script>-->
-<!--      var editor = CodeMirror.fromTextArea(document.getElementById("place_to_write_code"), {-->
-<!--        mode: "python",-->
-<!--        lineNumbers: true,-->
-<!--        matchBrackets: true,-->
-<!--        theme: "ayu-dark",-->
-<!--      });-->
-<!--    </script>-->
-  <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
-<!-- Preloader -->
-<script type="text/javascript">
-    //<![CDATA[
-    $(window).load(function () { // makes sure the whole site is loaded
-        $('#loader').fadeOut(); // will first fade out the loading animation
-        $('#loader-wrapper').delay(350).fadeOut('slow'); // will fade out the white DIV that covers the website.
-        $('body').delay(350).css({'overflow-y': 'visible'});
-    })
-    //]]>
-</script>
+
+    <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
+
+    <script src="{% static 'js/lesson_ajax_cod_tests.js' %}"></script>
+
     <script src="{% static 'js/lesson_06_04_24.js' %}"></script>
+
 {% endblock %}

@@ -20,7 +20,7 @@
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown"
                        aria-expanded="false">
-                        USERNAME
+                        {{request.user.username}}
                         {% if request.user.image %}
                         <img src="{{request.user.image.url}}" alt="Bootstrap" width="46" height="46" style="border-radius: 12px; margin-left: 12px;">
                         {% else %}

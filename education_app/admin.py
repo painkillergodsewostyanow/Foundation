@@ -3,7 +3,7 @@ from django.contrib import admin
 from .models import Course, CoursePart, Lesson, StudentThatSolvedCourseM2M, StudentThatSolvedCoursePartM2M, \
     StudentThatSolvedLessonM2M, StudentOnCourseM2M, SimpleTask, StudentThatSolvedSimpleTaskM2M, SimpleTaskToManualTest, \
     QuizQuestion, Answer, StudentThatSolvedQuizM2M, TaskWithFile, AnswerToTaskWithFile, \
-    StudentThatSolvedTaskWithFileM2M, FileExtends
+    StudentThatSolvedTaskWithFileM2M, FileExtends, ProgramLanguage, CodeTask, StudentThatSolvedCodeTaskM2M
 
 
 @admin.register(Course)
@@ -99,3 +99,17 @@ class StudentThatSolvedTaskWithFileM2MAdmin(admin.ModelAdmin):
 class FileExtendsAdmin(admin.ModelAdmin):
     list_display = ('name', 'extend')
 
+
+@admin.register(ProgramLanguage)
+class ProgramLanguageAdmin(admin.ModelAdmin):
+    list_display = ('id', 'lang')
+
+
+@admin.register(CodeTask)
+class CodeTaskAdmin(admin.ModelAdmin):
+    list_display = ('title', 'lesson', 'program_language')
+
+
+@admin.register(StudentThatSolvedCodeTaskM2M)
+class StudentThatSolvedCodeTaskM2MAdmin(admin.ModelAdmin):
+    list_display = ('student', 'code_task', 'time')

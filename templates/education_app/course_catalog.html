@@ -18,7 +18,7 @@
                 </div>
 
             </form>
-        {% if page_obj %}
+            {% if page_obj %}
                 {% for course in page_obj %}
                     <div class="col-lg-6 col-sm-12 col-xl-6 col-xxl-4">
                         <div class="card">
@@ -66,7 +66,7 @@
                 </div>
             {% endif %}
         {% else %}
-        <div class="text-center mt-3" style="color:white; font-size: 30px;">Курсов со схожим названием не найдено</div>
+            <div class="text-center mt-3" style="color:white; font-size: 30px;">Курсов со схожим названием не найдено</div>
         {% endif %}
     </div>
 {% endblock %}

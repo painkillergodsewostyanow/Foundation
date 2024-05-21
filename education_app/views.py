@@ -1,15 +1,20 @@
+import os
+
 from django.db.models import Count, Q, Max, OuterRef, Subquery, IntegerField, F, Case, When
 from django.db.models.functions import Coalesce
-from django.http import HttpResponse, Http404
+from django.http import HttpResponse, Http404, JsonResponse
 from django.shortcuts import render, get_object_or_404, reverse, redirect
 from django.views.generic import UpdateView, DetailView, CreateView, DeleteView, ListView, View
+
+from .code_tester import CodeTester
 from .forms import CourseForm, CoursePartForm, LessonForm, AnswerToSimpleTaskForm, SimpleTaskForm, QuizForm, AnswerForm, \
-    TaskWithFileForm, AnswerToTaskWFileForm
+    TaskWithFileForm, AnswerToTaskWFileForm, CodeTaskForm
 from .models import (Course, CoursePart, Lesson, SimpleTask, StudentThatSolvedLessonM2M, StudentThatSolvedCoursePartM2M,
                      StudentThatSolvedSimpleTaskM2M, SimpleTaskToManualTest, QuizQuestion, Answer,
                      StudentThatSolvedQuizM2M, TaskWithFile, AnswerToTaskWithFile, StudentThatSolvedTaskWithFileM2M,
-                     StudentThatSolvedCourseM2M)
+                     StudentThatSolvedCourseM2M, CodeTask)
 from django.contrib import messages
+from .code_executor import CodeExecutor
 
 
 def dashboard(request):
@@ -400,6 +405,9 @@ class LessonDetailView(DetailView):
         quizs = lesson.quizquestion_set.all().prefetch_related('answer_set').prefetch_related('students_that_solved')
         task_w_file = lesson.taskwithfile_set.all().prefetch_related('students_that_solved')
 
+        # TODO(ORM OPTIMIZE)
+        code_tasks = lesson.codetask_set.all().prefetch_related('students_that_solved')
+
         theory_task_w_file = list(filter(lambda x: x.place == 1, task_w_file))
         practice_task_w_file = list(filter(lambda x: x.place == 2, task_w_file))
         video_task_w_file = list(filter(lambda x: x.place == 3, task_w_file))
@@ -426,22 +434,26 @@ class LessonDetailView(DetailView):
 
         answer_to_task_w_file_form = AnswerToTaskWFileForm(student=self.request.user)
 
+        code_task_form = CodeTaskForm(code_tasks) if code_tasks else None
+
         return render(
             request,
             self.template_name,
             context={
                 'title': lesson.title,
-                'answer_to_task_w_file_form': answer_to_task_w_file_form,
-                'theory_task_w_file': theory_task_w_file,
-                'practice_task_w_file': practice_task_w_file,
-                'video_task_w_file': video_task_w_file,
-                'theory_task': theory_task, 'practice_task': practice_task,
-                'video_task': video_task, 'object': lesson,
+                'object': lesson,
                 'lesson_count': lesson.lessons_count,
                 'course_parts': course_parts,
-                'theory_quiz': theory_quiz, 'practice_quiz': practice_quiz,
-                'video_quiz': video_quiz,
-                'request_user_is_owner': request_user_is_owner
+                'request_user_is_owner': request_user_is_owner,
+
+                # task and answer forms
+                'answer_to_task_w_file_form': answer_to_task_w_file_form,
+                'theory_task_w_file': theory_task_w_file, 'practice_task_w_file': practice_task_w_file,
+                'video_task_w_file': video_task_w_file, 'theory_task': theory_task, 'practice_task': practice_task,
+                'video_task': video_task, 'theory_quiz': theory_quiz, 'practice_quiz': practice_quiz,
+                'video_quiz': video_quiz, 'code_task_form': code_task_form,
+                # task and answer forms
+
             }
         )
 
@@ -745,6 +757,43 @@ class TaskWithFileUpdateView(UpdateView):
         return self.object
 
 
+class CheckCodeTaskAnswerView(View):
+    form_class = CodeTaskForm
+
+    def post(self, *args, **kwargs):
+        lesson = get_object_or_404(Lesson, id=self.kwargs.get('lesson_id'))
+        student = self.request.user
+        if not lesson.student_has_access(student):
+            raise Http404()
+
+        users_code = self.request.POST.get('editor')
+
+        code_task = CodeTask.objects.filter(lesson=lesson).exclude(students_that_solved=student).first()
+        if not code_task:
+            code_task = CodeTask.objects.filter(lesson=self.kwargs.get('lesson_id')).last()
+
+        tester = CodeTester(os.getenv('ONECOMPILER_TOKEN'), code_task)
+
+        # TODO(Проверка через тесты )
+
+
+        # Проверка на прохождение тестов
+        if code_task.tests:
+            result = tester.do_test(users_code)
+
+            if result.errors:
+                return JsonResponse({'output': result.output, 'status': False, 'code_task_pk': code_task.pk})
+            code_task.students_that_solved.add(student)
+            return JsonResponse({'output': result.output, 'status': True, 'code_task_pk': code_task.pk})
+
+        # Проверка на выводимое значение
+        result, is_match = tester.check_output(users_code)
+        if result.errors or not is_match:
+            return JsonResponse({'output': result.output, 'status': False, 'code_task_pk': code_task.pk})
+        code_task.students_that_solved.add(student)
+        return JsonResponse({'output': result.output, 'status': True, 'code_task_pk': code_task.pk})
+
+
 def answer_to_task_with_file(request):
     if request.method == "POST":
         form = AnswerToTaskWFileForm(data=request.POST, files=request.FILES, student=request.user)
@@ -862,7 +911,6 @@ def answer_to_simple_task(request):
             redirect_to = redirect(reverse('education_app:lesson', args=(form.object.lesson.pk,)))
             if not form.object.manual_test:
                 if form.check_answer():
-
                     messages.info(request, 'Ответ верный')
                     return redirect_to
 

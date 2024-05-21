@@ -19,8 +19,6 @@ urlpatterns = [
 
     path('update-course/<int:course_id>', teacher_required(CourseUpdateView.as_view()),
          name='update_course'),
-
-    # TODO(DELETE COURSE)
     # COURSE
 
     # COURSE PART
@@ -56,11 +54,9 @@ urlpatterns = [
     # SIMPLE TASK
 
     # TASK WITH FILES
-
     path('lesson/<int:lesson_id>/add-task-with-file', TaskWithFileCreateView.as_view(), name='create_task_with_file'),
     path('task-with-file/<int:pk>/update', TaskWithFileUpdateView.as_view(), name='update_task_with_file'),
     path('task_with_file/answer', answer_to_task_with_file, name='answer_to_task_w_file'),
-
     # TASK WITH FILES
 
     # QUIZ TASK
@@ -84,6 +80,10 @@ urlpatterns = [
     path('reject', RejectAnswerView.as_view(), name='reject'),
     path('confirm', ConfirmAnswerView.as_view(), name='confirm'),
     # MANUAL TEST
+
+    # CODE TASK
+        path('lesson/<int:lesson_id>/execute-code', CheckCodeTaskAnswerView.as_view(), name='check_code_task'),
+    # CODE TASK
 
     path('catalog', CatalogListView.as_view(), name='catalog'),
     path('lesson/<int:pk>', login_required(LessonDetailView.as_view()), name='lesson'),

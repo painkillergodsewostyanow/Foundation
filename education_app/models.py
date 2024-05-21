@@ -6,6 +6,7 @@ from django_ckeditor_5.fields import CKEditor5Field
 from django.urls import reverse
 
 
+# COURSE
 class Course(models.Model):
     author = models.ForeignKey(Teacher, on_delete=models.PROTECT, verbose_name='Автор')
     title = models.CharField(max_length=50, verbose_name='Название')
@@ -76,8 +77,10 @@ class StudentOnCourseM2M(models.Model):
     class Meta:
         verbose_name = 'Студент записанный на курс'
         verbose_name_plural = 'Студенты записанные на курсы'
+# COURSE
 
 
+# COURSE PART
 class CoursePart(models.Model):
     course = models.ForeignKey(Course, on_delete=models.PROTECT)
     title = models.CharField(max_length=255)
@@ -138,8 +141,10 @@ class StudentThatSolvedCoursePartM2M(models.Model):
     class Meta:
         verbose_name = 'Решенный студентом раздел'
         verbose_name_plural = 'Решенные студентами разделы'
+# COURSE PART
 
 
+# LESSON
 class Lesson(models.Model):
     course_part = models.ForeignKey(CoursePart, on_delete=models.PROTECT)
     title = models.CharField(max_length=255)
@@ -218,11 +223,10 @@ class StudentThatSolvedLessonM2M(models.Model):
     class Meta:
         verbose_name = 'Решенный студентом урок'
         verbose_name_plural = 'Решенные студентами уроки'
+# LESSON
 
 
 # SIMPLE TASK
-
-
 class SimpleTask(models.Model):
     class Meta:
         verbose_name = 'Задача'
@@ -283,7 +287,6 @@ class SimpleTaskToManualTest(models.Model):
 
     def is_owner(self, teacher):
         return self.simple_task.lesson.course_part.course.is_owner(teacher)
-
 # SIMPLE TASK
 
 
@@ -326,10 +329,10 @@ class StudentThatSolvedQuizM2M(models.Model):
     student = models.ForeignKey(User, on_delete=models.PROTECT)
     quiz = models.ForeignKey(QuizQuestion, on_delete=models.PROTECT)
     time = models.DateTimeField(auto_now_add=True)
-
 # QUIZ TASK
 
 
+# TASK WITH FILES
 class FileExtends(models.Model):
     extend = models.CharField(max_length=5)
     name = models.CharField(max_length=255)
@@ -342,7 +345,6 @@ class FileExtends(models.Model):
         return self.name
 
 
-# TASK WITH FILES
 class TaskWithFile(models.Model):
     place = models.SmallIntegerField(
         choices=(
@@ -394,7 +396,49 @@ class StudentThatSolvedTaskWithFileM2M(models.Model):
     student = models.ForeignKey(User, on_delete=models.PROTECT)
     time = models.DateTimeField(auto_now_add=True)
     task = models.ForeignKey(TaskWithFile, on_delete=models.PROTECT)
-
 # TASK WITH FILES
 
 
+# CODE TASK
+class ProgramLanguage(models.Model):
+    lang = models.CharField(max_length=255)
+    js_req = models.CharField(max_length=255)
+
+    class Meta:
+        verbose_name = "Язык программирования"
+        verbose_name_plural = "Языки программирования"
+
+    def __str__(self):
+        return self.lang
+
+
+class CodeTask(models.Model):
+
+    lesson = models.ForeignKey(Lesson, on_delete=models.PROTECT)
+    title = models.CharField(max_length=255)
+    description = models.CharField(max_length=500)
+    hint = models.CharField(max_length=255)
+
+    program_language = models.ForeignKey(ProgramLanguage, models.PROTECT)
+
+    expected_output = models.TextField(blank=True, null=True)
+    tests = models.TextField(blank=True, null=True)
+
+    # TODO(Валидация на то что с js не создают задачи с выводом)
+    # TODO(Валидация, на то что введены либо тесты, либо ожидаемый вывод)
+
+    students_that_solved = models.ManyToManyField(
+        blank=True, null=True,
+        to=User, through='StudentThatSolvedCodeTaskM2M'
+    )
+
+    class Meta:
+        verbose_name = "Задача с кодом"
+        verbose_name_plural = "Задачи с кодом"
+
+
+class StudentThatSolvedCodeTaskM2M(models.Model):
+    code_task = models.ForeignKey(CodeTask, on_delete=models.PROTECT)
+    student = models.ForeignKey(User, on_delete=models.PROTECT)
+    time = models.DateTimeField(auto_now_add=True)
+# CODE TASK
