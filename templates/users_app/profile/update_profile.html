@@ -32,12 +32,12 @@
 
 <div class="errors" style="padding-top: 120px;">
     {% for key, value in form.errors.items  %}
-    <div  class="alert bg  col-12" role="alert">
+    <div  class="alert bg  col-12" role="alert" onclick="this.style.display = 'none';">
       {{key}} {{value}}
     </div>
     {% endfor %}
     {% for key, value in pwd_change_form.errors.items  %}
-    <div style="" class="alert bg col-12" role="alert">
+    <div style="" class="alert bg col-12" role="alert" onclick="this.style.display = 'none';">
       {{value}}
     </div>
     {% endfor %}

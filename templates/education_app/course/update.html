@@ -132,7 +132,7 @@
 </div>
 <div class="col-4 errors-second">
     {% for key, value in form.errors.items  %}
-    <div style="margin: 12px;" class="alert bg" role="alert">
+    <div style="margin: 12px;" class="alert bg" role="alert" onclick="this.style.display = 'none';">
       {{value}}
     </div>
     {% endfor %}

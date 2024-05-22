@@ -14,17 +14,17 @@
 <body>
 <div class="errors">
     {% for key, value in auth_form.errors.items  %}
-    <div style="" class="alert bg" role="alert">
+    <div style="" class="alert bg" role="alert" onclick="this.style.display = 'none';">
       {{value}}
     </div>
     {% endfor %}
     {% for key, value in reset_pwd_request_form.errors.items %}
-    <div style="" class="alert bg" role="alert">
+    <div style="" class="alert bg" role="alert" onclick="this.style.display = 'none';">
       {{value}}
     </div>
     {% endfor %}
     {% for key, value in reg_form.errors.items %}
-    <div style="" class="alert bg" role="alert">
+    <div style="" class="alert bg" role="alert" onclick="this.style.display = 'none';">
       {{value}}
     </div>
     {% endfor %}

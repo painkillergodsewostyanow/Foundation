@@ -87,6 +87,7 @@ body {
 }
 
 .errors{
+    cursor: pointer;
     left: 0;
     top: 0;
     position: absolute;
@@ -95,6 +96,7 @@ body {
     z-index: 99999;
 }
 .errors-second{
+    cursor: pointer;
     left: 0;
     bottom: 0;
     position: absolute;

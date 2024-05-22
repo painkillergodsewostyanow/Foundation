@@ -18,6 +18,15 @@
 {% endblock %}
 
 {% block content %}
+
+<div class="errors" style="top:100px;">
+    {% for key, value in form.errors.items  %}
+    <div style="" class="alert bg" role="alert" onclick="this.style.display = 'none';">
+      {{value}}
+    </div>
+    {% endfor %}
+</div>
+
 <div class="container">
     <div class="row">
         <form class="custom-form" style="margin-top:40px;" method="POST">
