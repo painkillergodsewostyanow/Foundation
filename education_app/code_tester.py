@@ -2,7 +2,7 @@ from education_app.code_executor import CodeExecutor
 
 
 class CodeTester:
-    """ Класс который, делает инъекцию проверяющий тестов """
+    """ Класс тестирующий ответ пользователя на задачу с кодом """
 
     def __init__(self, token, code_task):
         lang = code_task.program_language.lang
@@ -49,6 +49,7 @@ class JavaScriptTester:
 
     def _close_code_after_injection(self, code_w_test):
         return code_w_test
+
 
 class PythonTester:
 

@@ -8,7 +8,7 @@ from django.views.generic import UpdateView, DetailView, CreateView, DeleteView,
 
 from .code_tester import CodeTester
 from .forms import CourseForm, CoursePartForm, LessonForm, AnswerToSimpleTaskForm, SimpleTaskForm, QuizForm, AnswerForm, \
-    TaskWithFileForm, AnswerToTaskWFileForm, CodeTaskForm
+    TaskWithFileForm, AnswerToTaskWFileForm, IDE, CodeTaskForm
 from .models import (Course, CoursePart, Lesson, SimpleTask, StudentThatSolvedLessonM2M, StudentThatSolvedCoursePartM2M,
                      StudentThatSolvedSimpleTaskM2M, SimpleTaskToManualTest, QuizQuestion, Answer,
                      StudentThatSolvedQuizM2M, TaskWithFile, AnswerToTaskWithFile, StudentThatSolvedTaskWithFileM2M,
@@ -378,6 +378,9 @@ class LessonUpdateView(UpdateView):
             .prefetch_related('course_part__course')
             .prefetch_related('course_part__course__author')
             .prefetch_related('simpletask_set')
+            .prefetch_related('codetask_set')
+            .prefetch_related('taskwithfile_set')
+            .prefetch_related('quizquestion_set')
             .filter(course_part__course__author=self.request.user.teacher)
         )
 
@@ -434,7 +437,7 @@ class LessonDetailView(DetailView):
 
         answer_to_task_w_file_form = AnswerToTaskWFileForm(student=self.request.user)
 
-        code_task_form = CodeTaskForm(code_tasks) if code_tasks else None
+        code_task_form = IDE(code_tasks) if code_tasks else None
 
         return render(
             request,
@@ -757,8 +760,77 @@ class TaskWithFileUpdateView(UpdateView):
         return self.object
 
 
-class CheckCodeTaskAnswerView(View):
+class CodeTaskCreateView(CreateView):
     form_class = CodeTaskForm
+    template_name = 'education_app/code_task/create.html'
+    parent_obj = None
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({'title': f'{self.get_parent_obj()} | Добавление задачи с кодом'})
+        return context
+
+    def get(self, request, *args, **kwargs):
+        lesson = self.get_parent_obj()
+        if lesson.course_part.course.is_owner(request.user.teacher):
+            return super().get(request, args, kwargs)
+        raise Http404()
+
+    def post(self, request, *args, **kwargs):
+        lesson = self.get_parent_obj()
+        self.success_url = self.success_url = reverse('education_app:update_lesson', kwargs={'lesson_id': lesson.pk})
+
+        if lesson.course_part.course.is_owner(request.user.teacher):
+            return super().post(request, args, kwargs)
+        raise Http404()
+
+    def form_valid(self, form):
+        lesson = self.get_parent_obj()
+        form.instance.lesson = lesson
+        form.save()
+        return super().form_valid(form)
+
+    def get_parent_obj(self, queryset=None):
+        if not self.parent_obj:
+            lesson_id = self.kwargs.get('lesson_id')
+            self.parent_obj = get_object_or_404(Lesson, id=lesson_id)
+        return self.parent_obj
+
+
+class CodeTaskUpdateView(UpdateView):
+    form_class = CodeTaskForm
+    template_name = 'education_app/code_task/create.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({'title': f"{self.get_object().title} | Изменение"})
+        return context
+
+    def get(self, request, *args, **kwargs):
+        code_task = self.get_object()
+
+        if code_task.lesson.course_part.course.is_owner(request.user.teacher):
+            return super().post(request, args, kwargs)
+        raise Http404()
+
+    def post(self, request, *args, **kwargs):
+        code_task = self.get_object()
+
+        self.success_url = self.success_url = reverse('education_app:update_lesson',
+                                                      kwargs={'lesson_id': code_task.lesson.pk})
+
+        if code_task.lesson.course_part.course.is_owner(request.user.teacher):
+            return super().post(request, args, kwargs)
+        raise Http404()
+
+    def get_object(self, queryset=None):
+        if not hasattr(self, 'object'):
+            self.object = get_object_or_404(CodeTask, id=self.kwargs.get('pk'))
+        return self.object
+
+
+class CheckCodeTaskAnswerView(View):
+    form_class = IDE
 
     def post(self, *args, **kwargs):
         lesson = get_object_or_404(Lesson, id=self.kwargs.get('lesson_id'))
@@ -773,9 +845,6 @@ class CheckCodeTaskAnswerView(View):
             code_task = CodeTask.objects.filter(lesson=self.kwargs.get('lesson_id')).last()
 
         tester = CodeTester(os.getenv('ONECOMPILER_TOKEN'), code_task)
-
-        # TODO(Проверка через тесты )
-
 
         # Проверка на прохождение тестов
         if code_task.tests:

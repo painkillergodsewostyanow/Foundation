@@ -82,7 +82,9 @@ urlpatterns = [
     # MANUAL TEST
 
     # CODE TASK
-        path('lesson/<int:lesson_id>/execute-code', CheckCodeTaskAnswerView.as_view(), name='check_code_task'),
+    path('lesson/<int:lesson_id>/execute-code', CheckCodeTaskAnswerView.as_view(), name='check_code_task'),
+    path('lesson/<int:lesson_id>/add-code-task', CodeTaskCreateView.as_view(), name='create_code_task'),
+    path('code-task/<int:pk>/update', CodeTaskUpdateView.as_view(), name='update_code_task'),
     # CODE TASK
 
     path('catalog', CatalogListView.as_view(), name='catalog'),

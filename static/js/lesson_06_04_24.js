@@ -23,8 +23,6 @@ addEventListener("DOMContentLoaded", (event) => {
                     theme: "ayu-dark",
                 });
 
-                console.log(editor)
-
                 select = document.getElementById('lang-lst')
                 editor.setOption("mode", select.value);
                 

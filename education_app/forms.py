@@ -3,7 +3,7 @@ from pathlib import Path
 from django.shortcuts import get_object_or_404
 import re
 from .models import Course, CoursePart, Lesson, SimpleTask, SimpleTaskToManualTest, QuizQuestion, Answer, TaskWithFile, \
-    AnswerToTaskWithFile, FileExtends
+    AnswerToTaskWithFile, FileExtends, CodeTask, ProgramLanguage
 from django import forms
 
 
@@ -283,7 +283,7 @@ class AnswerToTaskWFileForm(forms.ModelForm):
         return super().save()
 
 
-class CodeTaskForm(forms.Form):
+class IDE(forms.Form):
     editor = forms.CharField(widget=forms.Textarea(attrs={'id': 'editor'}), required=False)
 
     def __init__(self, code_tasks):
@@ -301,5 +301,53 @@ class CodeTaskForm(forms.Form):
         for code_task in self.code_tasks:
             req_lst.append(code_task.program_language.lang)
 
+        return set(req_lst)
+
+
+class CodeTaskForm(forms.ModelForm):
+    title = forms.CharField(widget=forms.TextInput(attrs={
+        'style': "font-size:32px;", 'class': "form-control", 'placeholder': "Название"
+    }))
+
+    hint = forms.CharField(widget=forms.TextInput(attrs={
+        'style': "font-size:32px;", 'class': "form-control", 'placeholder': "Подсказка"
+    }))
+
+    description = forms.CharField(widget=forms.Textarea(attrs={
+        'style': "font-size:32px; height: 160px;", 'class': "form-control", 'placeholder': "Описание"
+    }))
+
+    program_langs = ProgramLanguage.objects.all()
+
+    program_lang_choice = []
+
+    for lang in program_langs:
+        program_lang_choice.append((lang.lang, lang.lang))
+
+    program_language = forms.ChoiceField(
+        choices=program_lang_choice,
+        widget=forms.Select(attrs={'class': "form-select", 'style': 'font-size:32px;', 'id': 'lang-lst'})
+    )
+
+    expected_output = forms.CharField(required=False, widget=forms.TextInput(attrs={
+        'style': "font-size:32px;", 'class': "form-control", 'placeholder': "Ожидаемый вывод"
+    }))
+
+    tests = forms.CharField(required=False, widget=forms.Textarea(attrs={'id': 'editor'}))
+
+    class Meta:
+        model = CodeTask
+        fields = ('title', 'description', 'hint', 'program_language', 'expected_output', 'tests')
+
+    def clean(self):
+        self.cleaned_data['program_language'] = self.program_langs.get(lang=self.data['program_language'])
+        return super().clean()
+
+
+    @property
+    def js_reqs(self):
+        req_lst = []
+        for lang in self.program_langs:
+            req_lst.append(lang.js_req)
         return set(req_lst)
 

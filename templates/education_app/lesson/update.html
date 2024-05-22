@@ -104,6 +104,23 @@
                     <li class="list-group-item text-center"><a class="btn" href="{% url 'education_app:create_task_with_file' object.pk %}">Добавить задачу с файловым ответом</a></li>
                 </ul>
             </div>
+
+            <div class="col-md-12" style="border-radius: 12px; margin-top:60px;">
+                <h4 style="color:white;">Задачи с кодом</h4>
+                <ul id="sortable" class="sortable-list">
+                    {% for code_task in object.codetask_set.all %}
+                        <li class="list-group-item">{{code_task.title}}
+                            <span style="float:right;">
+                                <a
+                                    href="{% url 'education_app:update_code_task' code_task.pk %}">Изменить
+                                </a>
+                            </span>
+                        </li>
+                    {% endfor %}
+                    <li class="list-group-item text-center"><a href="{% url 'education_app:create_code_task' object.pk %}" class="btn">Добавить задачу с кодом</a></li>
+                </ul>
+            </div>
+
         </div>
     </section>
 <div class="col-4 errors-second">

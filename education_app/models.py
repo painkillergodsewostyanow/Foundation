@@ -424,7 +424,7 @@ class CodeTask(models.Model):
     expected_output = models.TextField(blank=True, null=True)
     tests = models.TextField(blank=True, null=True)
 
-    # TODO(Валидация на то что с js не создают задачи с выводом)
+    # TODO(Валидация на то что с js не создаются задачи с выводом)
     # TODO(Валидация, на то что введены либо тесты, либо ожидаемый вывод)
 
     students_that_solved = models.ManyToManyField(
