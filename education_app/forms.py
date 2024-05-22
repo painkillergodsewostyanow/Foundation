@@ -69,9 +69,9 @@ class SimpleTaskForm(forms.ModelForm):
                    }
         ),
         choices=(
-          (1, "Раздел теории"),
-          (2, "Раздел практики"),
-          (3, "Раздел видео")
+            (1, "Раздел теории"),
+            (2, "Раздел практики"),
+            (3, "Раздел видео")
         )
     )
     title = forms.CharField(widget=forms.TextInput(attrs={
@@ -93,8 +93,10 @@ class SimpleTaskForm(forms.ModelForm):
     order = forms.IntegerField(widget=forms.NumberInput(attrs={
         'style': "font-size:32px;", 'class': "form-control", 'placeholder': "Порядок"
     }))
-    re_answer = forms.BooleanField(required=False, widget=forms.CheckboxInput(attrs={'class': "form-check-input", 'id': "re_answer"}))
-    manual_test = forms.BooleanField(required=False, widget=forms.CheckboxInput(attrs={'class': "form-check-input", 'id': "manual_test"}))
+    re_answer = forms.BooleanField(required=False,
+                                   widget=forms.CheckboxInput(attrs={'class': "form-check-input", 'id': "re_answer"}))
+    manual_test = forms.BooleanField(required=False, widget=forms.CheckboxInput(
+        attrs={'class': "form-check-input", 'id': "manual_test"}))
 
     class Meta:
         model = SimpleTask
@@ -109,9 +111,9 @@ class QuizForm(forms.ModelForm):
                    }
         ),
         choices=(
-          (1, "Раздел теории"),
-          (2, "Раздел практики"),
-          (3, "Раздел видео")
+            (1, "Раздел теории"),
+            (2, "Раздел практики"),
+            (3, "Раздел видео")
         )
     )
     title = forms.CharField(widget=forms.TextInput(attrs={
@@ -139,9 +141,9 @@ class TaskWithFileForm(forms.ModelForm):
                    }
         ),
         choices=(
-          (1, "Раздел теории"),
-          (2, "Раздел практики"),
-          (3, "Раздел видео")
+            (1, "Раздел теории"),
+            (2, "Раздел практики"),
+            (3, "Раздел видео")
         )
     )
     title = forms.CharField(widget=forms.TextInput(attrs={
@@ -225,9 +227,9 @@ class AnswerToSimpleTaskForm(forms.Form):
             return "Вы уже решили задачу, не балуйтесь !"
 
         count_today_tries = SimpleTaskToManualTest.objects.filter(
-                student=self.student,
-                simple_task=self.object,
-                time__date=timezone.now()
+            student=self.student,
+            simple_task=self.object,
+            time__date=timezone.now()
         ).count()
 
         if count_today_tries > 4:
@@ -340,9 +342,21 @@ class CodeTaskForm(forms.ModelForm):
         fields = ('title', 'description', 'hint', 'program_language', 'expected_output', 'tests')
 
     def clean(self):
+        if self.data['program_language'] == 'javascript' and self.data.get('expected_output'):
+            self.add_error(
+                'program_language',
+                'Для этого языка не возможно создать задачу с проверкой на ожидаемый вывод,'
+                ' тк он не поддерживает вывод значения'
+            )
+
+        if not (self.data['expected_output'] or self.data['tests']):
+            self.add_error(
+                'program_language',
+                'Для проверки необходимо указать ожидаемый вывод и(или) тесты'
+            )
+
         self.cleaned_data['program_language'] = self.program_langs.get(lang=self.data['program_language'])
         return super().clean()
-
 
     @property
     def js_reqs(self):
@@ -350,4 +364,3 @@ class CodeTaskForm(forms.ModelForm):
         for lang in self.program_langs:
             req_lst.append(lang.js_req)
         return set(req_lst)
-
