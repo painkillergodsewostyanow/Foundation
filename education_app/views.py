@@ -846,6 +846,14 @@ class CheckCodeTaskAnswerView(View):
 
         tester = CodeTester(os.getenv('ONECOMPILER_TOKEN'), code_task)
 
+        if code_task.tests and code_task.expected_output:
+            result, is_match = tester.do_test_and_check_output(users_code)
+
+            if not is_match or result.errors:
+                return JsonResponse({'output': result.output, 'status': False, 'code_task_pk': code_task.pk})
+            # code_task.students_that_solved.add(student)
+            return JsonResponse({'output': result.output, 'status': True, 'code_task_pk': code_task.pk})
+
         # Проверка на прохождение тестов
         if code_task.tests:
             result = tester.do_test(users_code)
