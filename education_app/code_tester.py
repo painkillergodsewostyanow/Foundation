@@ -37,7 +37,7 @@ class CodeTester:
         if not output:
             return False
 
-        unescaped_expected_output = self.__unescape(output)
+        unescaped_expected_output = self.__unescape(self.code_task.expected_output)
         return unescaped_expected_output == output
 
     def _inject_test(self, users_code, tests):
