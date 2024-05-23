@@ -90,7 +90,7 @@ class StudentDashboard(View):
 
         sub_query_get_next_lesson_pk = Lesson.objects.filter(
             course_part__course=OuterRef('pk'),
-            order__gt=OuterRef('last_solved_lesson_order'),  # ORDER ИЗ last_solved_lesson_order
+            order__gt=OuterRef('last_solved_lesson_order'),
         ).values('pk')[:1]
 
         sub_query_get_next_lesson_pk_if_no_one_solved = Lesson.objects.filter(
@@ -106,7 +106,6 @@ class StudentDashboard(View):
             last_solved_lesson_order=Subquery(
                 sub_query_get_last_solved_lesson, output_field=IntegerField()
             ),
-
             next_lesson_pk=Coalesce(
                 Subquery(sub_query_get_next_lesson_pk, output_field=IntegerField()),
                 Subquery(sub_query_get_next_lesson_pk_if_no_one_solved, output_field=IntegerField())
@@ -644,6 +643,7 @@ class QuizUpdateView(UpdateView):
 class AnswerToQuizCreateView(CreateView):
     form_class = AnswerForm
     template_name = 'education_app/answer_to_quiz/create.html'
+    parent_obj = None
 
     def post(self, request, *args, **kwargs):
         quiz = self.get_parent_obj()
@@ -658,6 +658,12 @@ class AnswerToQuizCreateView(CreateView):
         form.instance.question = quiz
         form.save()
         return super().form_valid(form)
+
+    def get_parent_obj(self, queryset=None):
+        if not self.parent_obj:
+            pk = self.kwargs.get('quiz_pk')
+            self.parent_obj = get_object_or_404(QuizQuestion, id=pk)
+        return self.parent_obj
 
 
 class AnswerToQuizUpdateView(UpdateView):
